@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Sistema Integral de Facturación Estética</title>
+    <style>
+          body { font - family: Arial, sans - serif; margin: 0; background: #f3f3f3; }
+          .container { max - width: 1200px; margin: 0 auto; padding: 24px; background: #fff; min - height: 100vh; }
+      h1, h2, h3 { color: #222; }
+          .flex { display: flex; gap: 40px; }
+          .card { border: 1px solid #ccc; border - radius: 8px; padding: 16px; margin - bottom: 20px; background: #fafafa; }
+          button { margin - left: 8px; margin - top: 2px; }
+          .cart - list li { margin - bottom: 6px; }
+          .factura, .reporte { background: #f7f7f7; border: 2px solid #333; padding: 20px; margin - top: 30px; }
+          .hidden { display: none; }
+          .user - panel { float: right; margin - top: -60px; }
+          .logout { color: #b00; border: none; background: none; font - weight: bold; cursor: pointer; }
+          label { display: inline - block; width: 120px; }
+      input, select { margin - bottom: 10px; }
+          .error { color: #b00; font - size: 0.95em; }
+          .success { color: #090; font - size: 0.95em; }
+          .tab - btn { background: #eee; border: 1px solid #888; border - bottom: none; padding: 8px 20px; cursor: pointer; }
+          .tab - btn.active { background: #fff; border - bottom: 2px solid #fff; font - weight: bold; }
+          .tabs { border - bottom: 1px solid #888; margin - bottom: 20px; }
+          .right { float: right; }
+          .small { font - size: 0.93em; }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Sistema Integral de Facturación</h1>
+      <div id="login-panel">
+        <h3>Iniciar sesión</h3>
+        <form id="login-form">
+          <label>Usuario: </label>
+          <input type="text" id="login-user" required /> <br />
+          <label>Contraseña: </label>
+          <input type="password" id="login-pass" required /> <br />
+          <button type="submit">Entrar</button>
+        </form>
+        <p class="small">
+          Ejemplo propietario: <b>propietario / 1234 </b> <br />
+          Ejemplo cajero: <b>cajero / 1234 </b>
+        </p>
+        <div id="login-error" class="error"></div>
+      </div>
+      <div id="main-panel" class="hidden">
+        <div class="user-panel">
+          <b id="usuario-nombre"> </b> (<span id="usuario-rol"></span>)
+          <button class="logout" onclick="logout()">Cerrar sesión</button>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn active" onclick="showTab('facturacion')">
+            Facturación
+          </button>
+          <button class="tab-btn" onclick="showTab('clientes')">
+            Clientes
+          </button>
+          <button class="tab-btn" onclick="showTab('inventario')">
+            Inventario
+          </button>
+          <button class="tab-btn" onclick="showTab('servicios')">
+            Servicios
+          </button>
+          <button class="tab-btn" onclick="showTab('reporte')">
+            Reporte Diario
+          </button>
+          <button
+            class="tab-btn"
+            id="usuarios-tab"
+            style="display: none"
+            onclick="showTab('usuarios')"
+          >
+            Usuarios
+          </button>
+        </div>
+        <!--FACTURACION -->
+        <div id="facturacion-tab">
+          <div class="flex">
+            <div style="flex: 1">
+              <div class="card">
+                <h2>Seleccionar Cliente</h2>
+                <select id="select-cliente"></select>
+                <button onclick="mostrarNuevoCliente()">Nuevo Cliente</button>
+                <div id="nuevo-cliente-panel" class="hidden">
+                  <h4>Agregar Cliente</h4>
+                  <form onsubmit="agregarCliente(event)">
+                    <label>Nombre: </label
+                    ><input type="text" id="cli-nombre" required /><br />
+                    <label> Teléfono: </label
+                    ><input type="text" id="cli-tel" /><br />
+                    <label> Dirección: </label
+                    ><input type="text" id="cli-dir" /><br />
+                    <button type="submit">Guardar</button>
+                    <button type="button" onclick="ocultarNuevoCliente()">
+                      Cancelar
+                    </button>
+                  </form>
+                  <div id="cli-err" class="error"></div>
+                </div>
+              </div>
+              <div class="card">
+                <h2>Productos</h2>
+                <ul id="productos-lista"></ul>
+                <h2>Servicios</h2>
+                <ul id="servicios-lista"></ul>
+              </div>
+            </div>
+            <div style="flex: 1">
+              <div class="card">
+                <h2>Carrito</h2>
+                <ul id="carrito-lista" class="cart-list"></ul>
+                <h3 id="subtotal">Subtotal: RD$0</h3>
+                <button onclick="generarFactura()" id="btn-factura" disabled>
+                  Generar Factura
+                </button>
+                <div id="factura" class="factura hidden"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!--CLIENTES -->
+        <div id="clientes-tab" class="hidden">
+          <div class="card">
+            <h2>Clientes registrados</h2>
+            <ul id="clientes-lista"></ul>
+          </div>
+        </div>
+        <!--INVENTARIO -->
+        <div id="inventario-tab" class="hidden">
+          <div class="card">
+            <h2>Productos</h2>
+            <form onsubmit="agregarProducto(event)">
+              <label>Nombre: </label
+              ><input type="text" id="prod-nombre" required />
+              <label> Precio: </label
+              ><input type="number" id="prod-precio" min="1" required />
+              <label> Stock: </label
+              ><input type="number" id="prod-stock" min="0" required />
+              <button type="submit">Agregar</button>
+            </form>
+            <div id="prod-err" class="error"></div>
+            <ul id="inv-prod-lista"></ul>
+          </div>
+        </div>
+        <!--SERVICIOS -->
+        <div id="servicios-tab" class="hidden">
+          <div class="card">
+            <h2>Servicios</h2>
+            <form onsubmit="agregarServicio(event)">
+              <label>Nombre: </label
+              ><input type="text" id="serv-nombre" required />
+              <label> Precio: </label
+              ><input type="number" id="serv-precio" min="1" required />
+              <label> Descripción: </label><input type="text" id="serv-desc" />
+              <button type="submit">Agregar</button>
+            </form>
+            <div id="serv-err" class="error"></div>
+            <ul id="serv-lista"></ul>
+          </div>
+        </div>
+        <!--REPORTE -->
+        <div id="reporte-tab" class="hidden">
+          <div class="card reporte">
+            <h2>Reporte Diario</h2>
+            <ul id="reporte-lista"></ul>
+            <h3 id="reporte-total"></h3>
+          </div>
+        </div>
+        <!--USUARIOS -->
+        <div id="usuarios-tab-panel" class="hidden">
+          <div class="card">
+            <h2>Usuarios</h2>
+            <form onsubmit="agregarUsuario(event)">
+              <label>Usuario: </label
+              ><input type="text" id="user-nombre" required />
+              <label> Rol: </label>
+              <select id="user-rol">
+                <option value="cajero">Cajero</option>
+                <option value="propietario">Propietario</option>
+              </select>
+              <label> Contraseña: </label>
+              <input type="password" id="user-pass" required />
+              <button type="submit">Agregar</button>
+            </form>
+            <div id="user-err" class="error"></div>
+            <ul id="usuarios-lista"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script>
+      /* ---- Datos iniciales ---- */
+      let usuarios = [
+        { nombre: "propietario", rol: "propietario", pass: "1234" },
+        { nombre: "cajero", rol: "cajero", pass: "1234" },
+      ];
+      let usuarioActual = null;
+
+      let productos = [
+        { id: 1, nombre: "Serum Vitamina C", precio: 950, stock: 20 },
+        { id: 2, nombre: "Bloqueador Solar", precio: 500, stock: 35 },
+        { id: 3, nombre: "Jabón Facial", precio: 350, stock: 15 },
+      ];
+
+      let servicios = [
+        {
+          id: 1,
+          nombre: "Limpieza facial",
+          precio: 1500,
+          descripcion: "Duración: 1 hora.",
+        },
+        {
+          id: 2,
+          nombre: "Peeling químico",
+          precio: 2700,
+          descripcion: "Tratamiento profundo.",
+        },
+        {
+          id: 3,
+          nombre: "Depilación laser",
+          precio: 1000,
+          descripcion: "Por zona.",
+        },
+      ];
+
+      let clientes = [
+        {
+          id: 1,
+          nombre: "Juan Perez",
+          tel: "8091231234",
+          dir: "Calle 1",
+          historial: [],
+        },
+        {
+          id: 2,
+          nombre: "Maria Guzman",
+          tel: "8092345678",
+          dir: "Calle 2",
+          historial: [],
+        },
+      ];
+
+      let carrito = [];
+      let ventasDiarias = [];
+      let clienteSeleccionado = clientes[0].id;
+
+      /* ---- LOGIN ---- */
+      document.getElementById("login-form").onsubmit = function (e) {
+        e.preventDefault();
+        let user = document.getElementById("login-user").value.trim();
+        let pass = document.getElementById("login-pass").value.trim();
+        let encontrado = usuarios.find(
+          (u) => u.nombre === user && u.pass === pass
+        );
+        if (!encontrado) {
+          document.getElementById("login-error").textContent =
+            "Usuario o clave incorrectos";
+          return;
+        }
+        usuarioActual = encontrado;
+        document.getElementById("login-panel").style.display = "none";
+        document.getElementById("main-panel").classList.remove("hidden");
+        document.getElementById("usuario-nombre").textContent =
+          usuarioActual.nombre;
+        document.getElementById("usuario-rol").textContent = usuarioActual.rol;
+        if (usuarioActual.rol === "propietario")
+          document.getElementById("usuarios-tab").style.display = "";
+        else document.getElementById("usuarios-tab").style.display = "none";
+        renderTodo();
+      };
+
+      function logout() {
+        usuarioActual = null;
+        document.getElementById("main-panel").classList.add("hidden");
+        document.getElementById("login-panel").style.display = "";
+        document.getElementById("login-user").value = "";
+        document.getElementById("login-pass").value = "";
+      }
+
+      function showTab(tab) {
+        [
+          "facturacion",
+          "clientes",
+          "inventario",
+          "servicios",
+          "reporte",
+          "usuarios-tab-panel",
+        ].forEach((id) => {
+          let el =
+            document.getElementById(id + "-tab") || document.getElementById(id);
+          if (el) el.classList.add("hidden");
+        });
+        if (tab === "usuarios") tab = "usuarios-tab-panel";
+        (
+          document.getElementById(tab + "-tab") || document.getElementById(tab)
+        ).classList.remove("hidden");
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) => b.classList.remove("active"));
+        let btns = document.querySelectorAll(".tab-btn");
+        if (tab === "usuarios-tab-panel") btns[5].classList.add("active");
+        else if (tab === "facturacion") btns[0].classList.add("active");
+        else if (tab === "clientes") btns[1].classList.add("active");
+        else if (tab === "inventario") btns[2].classList.add("active");
+        else if (tab === "servicios") btns[3].classList.add("active");
+        else if (tab === "reporte") btns[4].classList.add("active");
+        renderTodo();
+      }
+
+      /* ---- FACTURACION ---- */
+      function renderProductos() {
+        const ul = document.getElementById("productos-lista");
+        ul.innerHTML = "";
+        productos.forEach((prod) => {
+          const li = document.createElement("li");
+          li.textContent = `${prod.nombre} — RD$${prod.precio} (${prod.stock} en stock)`;
+          if (
+            usuarioActual.rol === "propietario" ||
+            usuarioActual.rol === "cajero"
+          ) {
+            const btn = document.createElement("button");
+            btn.textContent = "Agregar";
+            btn.onclick = () => agregarAlCarrito({ ...prod, tipo: "producto" });
+            if (prod.stock <= 0) btn.disabled = true;
+            li.appendChild(btn);
+          }
+          ul.appendChild(li);
+        });
+      }
+      function renderServicios() {
+        const ul = document.getElementById("servicios-lista");
+        ul.innerHTML = "";
+        servicios.forEach((serv) => {
+          const li = document.createElement("li");
+          li.textContent =
+            `${serv.nombre} — RD$${serv.precio}` +
+            (serv.descripcion ? ` (${serv.descripcion})` : "");
+          if (
+            usuarioActual.rol === "propietario" ||
+            usuarioActual.rol === "cajero"
+          ) {
+            const btn = document.createElement("button");
+            btn.textContent = "Agregar";
+            btn.onclick = () => agregarAlCarrito({ ...serv, tipo: "servicio" });
+            li.appendChild(btn);
+          }
+          ul.appendChild(li);
+        });
+      }
+      function agregarAlCarrito(item) {
+        const idx = carrito.findIndex(
+          (ci) => ci.id === item.id && ci.tipo === item.tipo
+        );
+        if (idx >= 0) {
+          if (
+            item.tipo === "producto" &&
+            carrito[idx].cantidad + 1 > getStock(item.id)
+          ) {
+            alert("No hay suficiente stock.");
+            return;
+          }
+          carrito[idx].cantidad += 1;
+        } else {
+          carrito.push({ ...item, cantidad: 1 });
+        }
+        renderCarrito();
+      }
+      function quitarDelCarrito(idx) {
+        carrito[idx].cantidad -= 1;
+        if (carrito[idx].cantidad <= 0) carrito.splice(idx, 1);
+        renderCarrito();
+      }
+      function renderCarrito() {
+        const ul = document.getElementById("carrito-lista");
+        ul.innerHTML = "";
+        let subtotal = 0;
+        carrito.forEach((item, idx) => {
+          subtotal += item.precio * item.cantidad;
+          const li = document.createElement("li");
+          li.textContent = `${item.tipo === "producto" ? "🛒" : "💆"} ${
+            item.nombre
+          } — RD$${item.precio} x ${item.cantidad}`;
+          const quitar = document.createElement("button");
+          quitar.textContent = "-";
+          quitar.onclick = () => quitarDelCarrito(idx);
+          li.appendChild(quitar);
+          ul.appendChild(li);
+        });
+        document.getElementById(
+          "subtotal"
+        ).textContent = `Subtotal: RD$${subtotal}`;
+        document.getElementById("btn-factura").disabled = carrito.length === 0;
+      }
+      function getStock(id) {
+        const prod = productos.find((p) => p.id === id);
+        return prod ? prod.stock : 0;
+      }
+
+      /* ---- CLIENTES ---- */
+      function renderClientes() {
+        const ul = document.getElementById("clientes-lista");
+        ul.innerHTML = "";
+        clientes.forEach((cli) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<b>${cli.nombre}</b> — Tel: ${cli.tel} — Dir: ${
+            cli.dir
+          }<br>
+      <span class='small'>Historial: ${
+        cli.historial.length === 0
+          ? "Sin compras/servicios."
+          : "<ul>" +
+            cli.historial
+              .map(
+                (h) =>
+                  `<li>${h.fecha} - ${h.tipo === "producto" ? "🛒" : "💆"} ${
+                    h.nombre
+                  } x${h.cantidad || 1} RD$${h.precio * (h.cantidad || 1)}</li>`
+              )
+              .join("") +
+            "</ul>"
+      }</span>`;
+          ul.appendChild(li);
+        });
+      }
+      function renderSelectClientes() {
+        const sel = document.getElementById("select-cliente");
+        sel.innerHTML = "";
+        clientes.forEach((cli) => {
+          let opt = document.createElement("option");
+          opt.value = cli.id;
+          opt.textContent = cli.nombre;
+          sel.appendChild(opt);
+        });
+        sel.value = clienteSeleccionado;
+        sel.onchange = () => {
+          clienteSeleccionado = +sel.value;
+        };
+      }
+      function mostrarNuevoCliente() {
+        document
+          .getElementById("nuevo-cliente-panel")
+          .classList.remove("hidden");
+        document.getElementById("cli-nombre").focus();
+      }
+      function ocultarNuevoCliente() {
+        document.getElementById("nuevo-cliente-panel").classList.add("hidden");
+        document.getElementById("cli-err").textContent = "";
+      }
+      function agregarCliente(e) {
+        e.preventDefault();
+        let nombre = document.getElementById("cli-nombre").value.trim();
+        if (nombre === "") {
+          document.getElementById("cli-err").textContent = "Nombre requerido";
+          return;
+        }
+        let tel = document.getElementById("cli-tel").value.trim();
+        let dir = document.getElementById("cli-dir").value.trim();
+        let nuevo = {
+          id: Math.max(...clientes.map((c) => c.id)) + 1,
+          nombre,
+          tel,
+          dir,
+          historial: [],
+        };
+        clientes.push(nuevo);
+        ocultarNuevoCliente();
+        renderSelectClientes();
+        clienteSeleccionado = nuevo.id;
+        renderClientes();
+      }
+
+      /* ---- FACTURA Y HISTORIAL ---- */
+      function generarFactura() {
+        if (carrito.length === 0) return;
+        let cli = clientes.find((c) => c.id === +clienteSeleccionado);
+        if (!cli) {
+          alert("No hay cliente seleccionado.");
+          return;
+        }
+        let fecha =
+          new Date().toISOString().split("T")[0] +
+          " " +
+          new Date().toLocaleTimeString();
+        let html = `<h2>Factura</h2>
+    <b>Cliente:</b> ${cli.nombre} (${cli.tel})<br>
+    <b>Dirección:</b> ${cli.dir}<br>
+    <b>Fecha:</b> ${fecha}<br>
+    <ul>`;
+        let total = 0;
+        carrito.forEach((item) => {
+          html += `<li>${item.nombre} — RD$${item.precio} x ${
+            item.cantidad || 1
+          } = RD$${item.precio * (item.cantidad || 1)}</li>`;
+          total += item.precio * (item.cantidad || 1);
+          // Añadir al historial del cliente
+          cli.historial.push({ ...item, fecha });
+          // Descontar stock si es producto
+          if (item.tipo === "producto") {
+            let prod = productos.find((p) => p.id === item.id);
+            if (prod) prod.stock -= item.cantidad;
+          }
+        });
+        html += `</ul><h3>Total a pagar: RD$${total}</h3>
+    <button onclick="cerrarFactura()">Cerrar</button>
+    <button onclick="window.print()">Imprimir</button>`;
+        document.getElementById("factura").innerHTML = html;
+        document.getElementById("factura").classList.remove("hidden");
+        // Guardar venta
+        ventasDiarias.push({
+          cliente: cli.nombre,
+          fecha,
+          items: JSON.parse(JSON.stringify(carrito)),
+          total,
+        });
+        // Limpiar carrito
+        carrito.length = 0;
+        renderProductos();
+        renderCarrito();
+        renderClientes();
+      }
+      function cerrarFactura() {
+        document.getElementById("factura").classList.add("hidden");
+      }
+
+      /* ---- INVENTARIO ---- */
+      function renderInventario() {
+        const ul = document.getElementById("inv-prod-lista");
+        ul.innerHTML = "";
+        productos.forEach((prod) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<b>${prod.nombre}</b> — Precio: RD$${prod.precio} — Stock: ${prod.stock}`;
+          if (usuarioActual.rol === "propietario") {
+            const btn = document.createElement("button");
+            btn.textContent = "Eliminar";
+            btn.onclick = () => {
+              productos = productos.filter((p) => p.id !== prod.id);
+              renderInventario();
+              renderProductos();
+            };
+            li.appendChild(btn);
+          }
+          ul.appendChild(li);
+        });
+      }
+      function agregarProducto(e) {
+        e.preventDefault();
+        let nombre = document.getElementById("prod-nombre").value.trim();
+        let precio = +document.getElementById("prod-precio").value;
+        let stock = +document.getElementById("prod-stock").value;
+        if (nombre === "" || precio <= 0 || stock < 0) {
+          document.getElementById("prod-err").textContent = "Datos inválidos";
+          return;
+        }
+        productos.push({
+          id: Math.max(...productos.map((p) => p.id), 0) + 1,
+          nombre,
+          precio,
+          stock,
+        });
+        e.target.reset();
+        renderInventario();
+        renderProductos();
+      }
+
+      /* ---- SERVICIOS ---- */
+      function renderServiciosAdmin() {
+        const ul = document.getElementById("serv-lista");
+        ul.innerHTML = "";
+        servicios.forEach((serv) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<b>${serv.nombre}</b> — Precio: RD$${serv.precio} — ${
+            serv.descripcion || ""
+          }`;
+          if (usuarioActual.rol === "propietario") {
+            const btn = document.createElement("button");
+            btn.textContent = "Eliminar";
+            btn.onclick = () => {
+              servicios = servicios.filter((s) => s.id !== serv.id);
+              renderServiciosAdmin();
+              renderServicios();
+            };
+            li.appendChild(btn);
+          }
+          ul.appendChild(li);
+        });
+      }
+      function agregarServicio(e) {
+        e.preventDefault();
+        let nombre = document.getElementById("serv-nombre").value.trim();
+        let precio = +document.getElementById("serv-precio").value;
+        let descripcion = document.getElementById("serv-desc").value.trim();
+        if (nombre === "" || precio <= 0) {
+          document.getElementById("serv-err").textContent = "Datos inválidos";
+          return;
+        }
+        servicios.push({
+          id: Math.max(...servicios.map((s) => s.id), 0) + 1,
+          nombre,
+          precio,
+          descripcion,
+        });
+        e.target.reset();
+        renderServiciosAdmin();
+        renderServicios();
+      }
+
+      /* ---- REPORTE ---- */
+      function renderReporte() {
+        const ul = document.getElementById("reporte-lista");
+        ul.innerHTML = "";
+        let total = 0;
+        ventasDiarias.forEach((venta) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<b>${venta.fecha}</b> - Cliente: ${venta.cliente} - RD$${venta.total}`;
+          ul.appendChild(li);
+          total += venta.total;
+        });
+        document.getElementById(
+          "reporte-total"
+        ).textContent = `Total del día: RD$${total}`;
+      }
+
+      /* ---- USUARIOS (PROPIETARIO) ---- */
+      function renderUsuarios() {
+        const ul = document.getElementById("usuarios-lista");
+        ul.innerHTML = "";
+        usuarios.forEach((u) => {
+          const li = document.createElement("li");
+          li.textContent = `${u.nombre} — ${u.rol}`;
+          if (
+            usuarioActual.rol === "propietario" &&
+            u.nombre !== "propietario"
+          ) {
+            const btn = document.createElement("button");
+            btn.textContent = "Eliminar";
+            btn.onclick = () => {
+              usuarios = usuarios.filter((us) => us.nombre !== u.nombre);
+              renderUsuarios();
+            };
+            li.appendChild(btn);
+          }
+          ul.appendChild(li);
+        });
+      }
+      function agregarUsuario(e) {
+        e.preventDefault();
+        let nombre = document.getElementById("user-nombre").value.trim();
+        let rol = document.getElementById("user-rol").value;
+        let pass = document.getElementById("user-pass").value;
+        if (nombre === "" || rol === "" || pass === "") {
+          document.getElementById("user-err").textContent = "Datos inválidos";
+          return;
+        }
+        if (usuarios.find((u) => u.nombre === nombre)) {
+          document.getElementById("user-err").textContent = "Usuario ya existe";
+          return;
+        }
+        usuarios.push({ nombre, rol, pass });
+        e.target.reset();
+        renderUsuarios();
+      }
+
+      /* ---- RENDER GENERAL ---- */
+      function renderTodo() {
+        renderProductos();
+        renderServicios();
+        renderCarrito();
+        renderClientes();
+        renderSelectClientes();
+        renderInventario();
+        renderServiciosAdmin();
+        renderReporte();
+        renderUsuarios();
+      }
+
+      renderTodo();
+    </script>
+  </body>
+</html>

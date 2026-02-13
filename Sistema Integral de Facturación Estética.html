@@ -1,0 +1,4267 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Sistema Integral de Facturación Estética</title>
+    <style>
+      /* --- CSS Corregido: Eliminados los espacios en blanco entre las propiedades y los guiones --- */
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        background: #f3f3f3;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 24px;
+        background: #fff;
+        min-height: 100vh;
+      }
+      h1,
+      h2,
+      h3 {
+        color: #222;
+      }
+      .flex {
+        display: flex;
+        gap: 40px;
+      }
+      .card {
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 20px;
+        background: #fafafa;
+      }
+      button {
+        margin-left: 8px;
+        margin-top: 2px;
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        background: #e0e0e0;
+        cursor: pointer; /* Añadido para mejor UX */
+      }
+      button:hover {
+        background: #d0d0d0;
+      }
+      button:disabled {
+        background: #f0f0f0;
+        color: #aaa;
+        cursor: not-allowed;
+      }
+      .cart-list {
+        list-style: none;
+        padding: 0;
+      }
+      .cart-list li {
+        margin-bottom: 6px;
+        border-bottom: 1px dotted #eee;
+        padding-bottom: 5px;
+      }
+      .factura,
+      .reporte {
+        background: #f7f7f7;
+        border: 2px solid #333;
+        padding: 20px;
+        margin-top: 30px;
+      }
+      .hidden {
+        display: none !important; /* Importante para asegurar que se oculte */
+      }
+      .user-panel {
+        float: right;
+        margin-top: -60px;
+      }
+      .logout {
+        color: #b00;
+        border: none;
+        background: none;
+        font-weight: bold;
+        cursor: pointer;
+      }
+      label {
+        display: inline-block;
+        width: 120px;
+      }
+      input[type="text"],
+      input[type="password"],
+      input[type="number"],
+      select {
+        margin-bottom: 10px;
+        padding: 8px; /* Ajustado para mejor UX */
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box; /* Para que padding no aumente el ancho total */
+      }
+      .error {
+        color: #b00;
+        font-size: 0.95em;
+      }
+      .success {
+        color: #090;
+        font-size: 0.95em;
+      }
+      .tab-btn {
+        background: #eee;
+        border: 1px solid #888;
+        border-bottom: none;
+        padding: 8px 20px;
+        cursor: pointer;
+        border-radius: 5px 5px 0 0;
+      }
+      .tab-btn.active {
+        background: #fff;
+        border-bottom: 2px solid #fff;
+        font-weight: bold;
+        border-color: #fff;
+        z-index: 1; /* Para que quede por encima de la línea */
+        position: relative;
+      }
+      .tabs {
+        border-bottom: 1px solid #888;
+        margin-bottom: 20px;
+        display: flex; /* Para alinear los botones de las pestañas */
+      }
+      .right {
+        float: right;
+      }
+      .small {
+        font-size: 0.93em;
+      }
+      /* Estilos específicos para la búsqueda de ítems */
+      #item-search-results {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #eee;
+        background: white;
+        margin-top: 10px;
+        list-style: none;
+        padding: 0;
+      }
+      #item-search-results li {
+        padding: 8px 12px;
+        cursor: pointer;
+        border-bottom: 1px solid #f0f0f0;
+      }
+      #item-search-results li:hover {
+        background: #e9e9e9;
+      }
+      #item-search-results li:last-child {
+        border-bottom: none;
+      }
+      /* Estilo para la vista de impresión */
+      #printable-invoice-container,
+      #printable-history-container,
+      #printable-report-container {
+        /* ¡Aquí está el cambio! */
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: white;
+        z-index: 1000;
+        padding: 20px;
+        box-sizing: border-box;
+        overflow-y: auto;
+        color: #000;
+      }
+
+      #printable-invoice,
+      #printable-history {
+        max-width: 800px; /* Ancho máximo para el contenido de la factura/historial */
+        margin: 0 auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        background: #fff;
+      }
+      #printable-invoice h2,
+      #printable-history h2 {
+        text-align: center;
+        margin-bottom: 20px;
+        color: #333;
+      }
+      #printable-invoice h3,
+      #printable-history h3 {
+        color: #555;
+        margin-top: 20px;
+      }
+      #printable-invoice p,
+      #printable-history p {
+        margin-bottom: 5px;
+      }
+      #printable-invoice ul,
+      #printable-history ul {
+        list-style: none;
+        padding: 0;
+        margin: 20px 0;
+        border-top: 1px solid #eee;
+        border-bottom: 1px solid #eee;
+      }
+      #printable-invoice ul li,
+      #printable-history ul li {
+        padding: 8px 0;
+        border-bottom: 1px dotted #eee;
+      }
+      #printable-invoice ul li:last-child,
+      #printable-history ul li:last-child {
+        border-bottom: none;
+      }
+      #printable-invoice .total,
+      #printable-history .total {
+        text-align: right;
+        font-size: 1.2em;
+        font-weight: bold;
+        margin-top: 20px;
+      }
+      #printable-invoice button,
+      #printable-history button {
+        margin-left: 10px;
+        margin-top: 20px;
+      }
+
+      /* Media Query para impresión */
+      @media print {
+        body
+              > *:not(#printable-invoice-container):not(
+                #printable-history-container
+              ):not(#printable-report-container) /* ¡Aquí está el cambio! */ {
+          display: none !important; /* Oculta todo excepto el contenedor de impresión */
+        }
+        // ... el resto de las reglas de impresión (que también deberíamos adaptar)
+
+        // También debemos añadir el #printable-report-container aquí para que herede estos estilos
+        #printable-invoice-container,
+        #printable-history-container,
+        #printable-report-container {
+          /* Añadido aquí también */
+          position: static; /* Para que no afecte el layout de impresión */
+          width: auto;
+          height: auto;
+          overflow: visible;
+          padding: 0;
+        }
+        #printable-invoice,
+        #printable-history,
+        #printable-report {
+          /* Y aquí para los contenedores internos */
+          box-shadow: none;
+          border: none;
+          padding: 0;
+        }
+        button {
+          display: none !important; /* Ocultar botones en la impresión */
+        }
+      }
+
+      /* --- ESTILOS PARA LA VISTA DE TARJETAS DEL REPORTE DIARIO --- */
+
+      /* Contenedor de cada item de la lista (simplemente para espacio) */
+      #salesList .venta-card-container {
+        padding: 10px 0;
+        margin-bottom: 15px; /* Espacio entre cada tarjeta */
+        border: none;
+      }
+
+      /* La tarjeta flotante principal */
+      .venta-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px; /* Bordes redondeados */
+        padding: 15px;
+        background-color: #ffffff; /* Fondo blanco */
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra para efecto flotante */
+        transition: box-shadow 0.3s ease; /* Transición suave de la sombra */
+      }
+
+      .venta-card:hover {
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15); /* Sombra un poco más fuerte al pasar el ratón */
+      }
+
+      /* Detalles de la tarjeta (Cliente y Total) */
+      .card-detail {
+        display: flex;
+        justify-content: space-between; /* Pone el Cliente a la izquierda y el Total a la derecha */
+        align-items: center;
+        margin-bottom: 10px;
+        border-bottom: 1px dashed #f0f0f0; /* Separador sutil */
+        padding-bottom: 8px;
+      }
+
+      /* Estilo para el monto del total */
+      .total-info .monto {
+        font-size: 1.4em; /* Monto más grande */
+        font-weight: bold;
+        color: #007bff; /* Color primario, azul */
+      }
+
+      /* Pie de página (Usuario y Hora) */
+      .card-footer {
+        display: flex;
+        justify-content: space-between; /* Pone una info a la izquierda y otra a la derecha */
+        font-size: 0.85em;
+        color: #777; /* Texto más suave */
+      }
+      /* Estilo para el botón de edición en la tarjeta */
+      .edit-btn {
+        background-color: #ffc107; /* Amarillo advertencia */
+        color: #333;
+        border: none;
+        padding: 3px 8px;
+        font-size: 0.9em;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-left: 10px; /* Espacio entre la fecha y el botón */
+      }
+      .edit-btn:hover {
+        background-color: #e0a800;
+      }
+
+      /* Para alinear la fecha y el botón */
+      .footer-actions {
+        display: flex;
+        align-items: center;
+      }
+
+      /* --- ESTILOS PARA EL MODAL DE EDICIÓN --- */
+
+      /* El fondo oscuro */
+      .modal-backdrop {
+        position: fixed; /* Cubre toda la pantalla */
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.6); /* Semitransparente */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 1000; /* Por encima de todo */
+      }
+
+      /* El panel blanco */
+      .modal-panel {
+        background-color: white;
+        padding: 25px;
+        border-radius: 8px;
+        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        width: 90%;
+        max-width: 500px; /* Ancho máximo */
+      }
+
+      /* Ocultar el modal por defecto */
+      .hidden {
+        display: none;
+      }
+
+      /* Estilos del formulario dentro del modal */
+      .modal-panel h2 {
+        margin-top: 0;
+      }
+      .form-group {
+        margin-bottom: 15px;
+      }
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+      .form-group input {
+        width: 100%;
+        padding: 8px;
+        box-sizing: border-box; /* Importante para que el padding no rompa el ancho */
+      }
+      .modal-actions {
+        margin-top: 20px;
+        text-align: right;
+      }
+      .btn-cancelar,
+      .btn-guardar {
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      .btn-cancelar {
+        background-color: #ccc;
+        margin-right: 10px;
+      }
+      .btn-guardar {
+        background-color: #28a745; /* Verde */
+        color: white;
+      }
+
+      /* Estilo para la tabla de productos dentro del modal */
+      .productos-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 20px;
+      }
+      .productos-table th,
+      .productos-table td {
+        border: 1px solid #ddd;
+        padding: 8px;
+        text-align: left;
+      }
+      .productos-table th {
+        background-color: #f2f2f2;
+      }
+
+      /* Estilos de los totales en la edición */
+      .factura-totales-edit {
+        text-align: right;
+        font-size: 1.1em;
+      }
+      .factura-totales-edit .gran-total {
+        font-size: 1.5em;
+        font-weight: bold;
+        color: #007bff;
+        margin-top: 10px;
+      }
+      .hidden {
+        display: none !important; /* El !important asegura que se imponga sobre otros estilos */
+      }
+
+      /* --- ESTILOS PARA LA SECCIÓN DE AGENDA --- */
+      .cita-card {
+        border: 1px solid #d0d0d0;
+        border-radius: 8px;
+        padding: 12px;
+        margin-bottom: 12px;
+        background: #f9f9f9;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+      .cita-card:hover {
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      }
+      .cita-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+      }
+      .cita-cliente {
+        font-weight: bold;
+        color: #333;
+        font-size: 1.05em;
+      }
+      .cita-estado {
+        padding: 4px 10px;
+        border-radius: 12px;
+        font-size: 0.85em;
+        font-weight: bold;
+      }
+      .cita-estado.pendiente {
+        background: #fff3cd;
+        color: #856404;
+      }
+      .cita-estado.completada {
+        background: #d4edda;
+        color: #155724;
+      }
+      .cita-estado.cancelada {
+        background: #f8d7da;
+        color: #721c24;
+      }
+      .cita-detalles {
+        font-size: 0.9em;
+        color: #555;
+        margin: 8px 0;
+      }
+      .cita-actions {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+      }
+      .cita-actions button {
+        padding: 6px 12px;
+        font-size: 0.85em;
+        background: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      .cita-actions button:hover {
+        background: #0056b3;
+      }
+      .cita-actions .btn-completar {
+        background: #28a745;
+      }
+      .cita-actions .btn-completar:hover {
+        background: #1e7e34;
+      }
+      .cita-actions .btn-cancelar {
+        background: #dc3545;
+      }
+      .cita-actions .btn-cancelar:hover {
+        background: #c82333;
+      }
+      input[type="date"],
+      input[type="time"] {
+        margin-bottom: 10px;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Sistema Integral de Facturación</h1>
+      <div id="login-panel">
+        <h3>Iniciar sesión</h3>
+        <form id="login-form">
+          <label>Usuario: </label>
+          <input type="text" id="login-user" required /> <br />
+          <label>Contraseña: </label>
+          <input type="password" id="login-pass" required /> <br />
+          <button type="submit">Entrar</button>
+        </form>
+        <p class="small">
+          "Gnóthi seautón" <br />
+          "Homo nosce te ipsum" <br />
+          "Hombre, conocete a ti mismo, y conoceras al Universo y a los Dioses."
+        </p>
+        <div id="login-error" class="error"></div>
+      </div>
+      <div id="main-panel" class="hidden">
+        <div class="user-panel">
+          <b id="usuario-nombre"> </b> (<span id="usuario-rol"></span>)
+          <button class="logout" onclick="logout()">Cerrar sesión</button>
+          <!-- Botón para mostrar el formulario de cambiar contraseña (solo visible para admin si lo quieres) -->
+          <button
+            id="btnCambiarPass"
+            onclick="mostrarCambioPassword()"
+            style="margin-left: 8px; padding: 6px 10px"
+          >
+            Cambiar contraseña
+          </button>
+        </div>
+
+        <div class="tabs">
+          <button
+            class="tab-btn active"
+            data-tab="facturacion"
+            onclick="showTab('facturacion')"
+          >
+            Facturación
+          </button>
+          <button
+            class="tab-btn"
+            data-tab="clientes"
+            onclick="showTab('clientes')"
+          >
+            Clientes
+          </button>
+
+          <button
+            class="tab-btn"
+            data-tab="inventario"
+            onclick="showTab('inventario')"
+          >
+            Inventario
+          </button>
+          <button
+            class="tab-btn"
+            data-tab="servicios"
+            onclick="showTab('servicios')"
+          >
+            Servicios
+          </button>
+          <button
+            class="tab-btn"
+            data-tab="reporte"
+            onclick="showTab('reporte')"
+          >
+            Reporte Diario
+          </button>
+
+          <button class="tab-btn" data-tab="agenda" onclick="showTab('agenda')">
+            Agenda
+          </button>
+
+          <button
+            class="tab-btn"
+            id="usuarios-tab"
+            style="display: none"
+            data-tab="usuarios"
+            onclick="showTab('usuarios')"
+          >
+            Usuarios
+          </button>
+        </div>
+
+        <!--FACTURACION -->
+        <div id="facturacion-tab">
+          <div class="flex">
+            <div style="flex: 1">
+              <div class="card">
+                <h2>Seleccionar Cliente</h2>
+                <select id="select-cliente" style="width: 100%"></select>
+                <div id="cli-err" class="error"></div>
+              </div>
+
+              <div class="card">
+                <h2>Buscar y Añadir Ítems</h2>
+                <input
+                  type="text"
+                  id="item-search-input"
+                  placeholder="Buscar producto o servicio..."
+                  oninput="filterItems()"
+                  style="width: 100%"
+                />
+                <ul id="item-search-results">
+                  <!-- Resultados de la búsqueda se renderizarán aquí -->
+                </ul>
+              </div>
+            </div>
+            <div style="flex: 1">
+              <div class="card">
+                <h2>Carrito</h2>
+                <ul id="carrito-lista" class="cart-list"></ul>
+                <h3 id="subtotal">Subtotal: RD$0</h3>
+                <button onclick="generarFactura()" id="btn-factura" disabled>
+                  Generar Factura
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!--CLIENTES -->
+        <div id="clientes-tab" class="hidden">
+          <div class="card">
+            <h2>Clientes registrados</h2>
+            <button onclick="mostrarNuevoClienteClientes()" id="btn-add-client">
+              Agregar Nuevo Cliente
+            </button>
+            <div
+              id="nuevo-cliente-panel-clientes"
+              class="hidden"
+              style="margin-top: 20px"
+            >
+              <h4>Agregar Cliente</h4>
+              <form onsubmit="agregarCliente(event)">
+                <label>Nombre: </label
+                ><input
+                  type="text"
+                  id="cli-nombre-clientes"
+                  required
+                  style="width: calc(100% - 130px)"
+                /><br />
+                <label> Teléfono: </label
+                ><input
+                  type="text"
+                  id="cli-tel-clientes"
+                  style="width: calc(100% - 130px)"
+                /><br />
+                <label> Dirección: </label
+                ><input
+                  type="text"
+                  id="cli-dir-clientes"
+                  style="width: calc(100% - 130px)"
+                /><br />
+                <button type="submit">Guardar</button>
+                <button type="button" onclick="ocultarNuevoClienteClientes()">
+                  Cancelar
+                </button>
+              </form>
+              <div id="cli-err-clientes" class="error"></div>
+            </div>
+            <ul
+              id="clientes-lista"
+              style="margin-top: 20px; list-style: none; padding: 0"
+            ></ul>
+          </div>
+        </div>
+        <!--INVENTARIO -->
+        <div id="inventario-tab" class="hidden">
+          <div class="card">
+            <h2>Productos</h2>
+            <form onsubmit="agregarProducto(event)" id="form-add-product">
+              <label>Nombre: </label
+              ><input
+                type="text"
+                id="prod-nombre"
+                required
+                style="width: calc(100% - 130px)"
+              />
+              <label> Precio: </label
+              ><input
+                type="number"
+                id="prod-precio"
+                min="1"
+                required
+                style="width: calc(100% - 130px)"
+              />
+              <label> Stock: </label
+              ><input
+                type="number"
+                id="prod-stock"
+                min="0"
+                required
+                style="width: calc(100% - 130px)"
+              />
+              <label> Descripción: </label
+              ><input
+                type="text"
+                id="prod-descripcion"
+                placeholder="Información adicional del producto"
+                style="width: calc(100% - 130px)"
+              />
+              <button type="submit">Agregar</button>
+            </form>
+            <div id="prod-err" class="error"></div>
+            <ul id="inv-prod-lista" style="list-style: none; padding: 0"></ul>
+          </div>
+        </div>
+        <!--SERVICIOS -->
+        <div id="servicios-tab" class="hidden">
+          <div class="card">
+            <h2>Servicios</h2>
+            <form onsubmit="agregarServicio(event)" id="form-add-service">
+              <label>Nombre: </label
+              ><input
+                type="text"
+                id="serv-nombre"
+                required
+                style="width: calc(100% - 130px)"
+              />
+              <label> Precio: </label
+              ><input
+                type="number"
+                id="serv-precio"
+                min="1"
+                required
+                style="width: calc(100% - 130px)"
+              />
+              <label> Descripción: </label
+              ><input
+                type="text"
+                id="serv-desc"
+                style="width: calc(100% - 130px)"
+              />
+              <button type="submit">Agregar</button>
+            </form>
+            <div id="serv-err" class="error"></div>
+            <ul id="serv-lista" style="list-style: none; padding: 0"></ul>
+          </div>
+        </div>
+        <!--REPORTE -->
+        <div id="reporte-tab" class="hidden">
+          <!-- Agrega este div para el selector de fecha y el botón de búsqueda -->
+          <div class="report-controls">
+            <label for="reportDate">Seleccionar fecha del reporte:</label>
+            <input type="date" id="reportDate" />
+            <button id="loadReportsBtn">Cargar Reportes</button>
+          </div>
+          <!-- Este es el contenedor donde se mostrarán los reportes diarios/filtrados -->
+          <div id="dailyReportsContainer">
+            <h2>
+              Reporte de Ventas del Día: <span id="currentReportDate"></span>
+            </h2>
+            <ul id="salesList">
+              <!-- Aquí se inyectarán las facturas/ventas del día con JavaScript -->
+              <li>Cargando reportes...</li>
+            </ul>
+            <h4
+              id="salesTotal"
+              style="
+                text-align: right;
+                margin-top: 20px;
+                font-size: 1.5em;
+                color: #333;
+              "
+            >
+              Total del día: RD$0.00
+            </h4>
+            <button id="printReportsBtn" onclick="printDailyReport()">
+              Imprimir/Guardar Reporte
+            </button>
+          </div>
+        </div>
+
+        <!--AGENDA -->
+        <div id="agenda-tab" class="hidden">
+          <div class="flex">
+            <div style="flex: 1">
+              <div class="card">
+                <h2>Agendar Nueva Cita</h2>
+                <form id="form-agendar-cita">
+                  <label>Cliente:</label>
+                  <select id="cita-cliente" required></select>
+                  <div id="cita-err" class="error"></div>
+
+                  <label>Tratamiento/Servicio:</label>
+                  <select id="cita-servicio" required>
+                    <option value="">-- Selecciona un servicio --</option>
+                  </select>
+
+                  <label>Fecha de la Cita:</label>
+                  <input type="date" id="cita-fecha" required />
+
+                  <label>Hora:</label>
+                  <input type="time" id="cita-hora" required />
+
+                  <label>Observaciones:</label>
+                  <textarea
+                    id="cita-observaciones"
+                    placeholder="Notas adicionales (opcional)"
+                    style="
+                      width: 100%;
+                      padding: 8px;
+                      border: 1px solid #ccc;
+                      border-radius: 4px;
+                      margin-bottom: 10px;
+                      box-sizing: border-box;
+                      height: 80px;
+                    "
+                  ></textarea>
+
+                  <label>Teléfono WhatsApp (incluye +1 para RD):</label>
+                  <input
+                    type="tel"
+                    id="cita-whatsapp"
+                    placeholder="+1-809-123-4567"
+                    required
+                  />
+
+                  <button
+                    type="submit"
+                    style="
+                      background: #28a745;
+                      color: white;
+                      width: 100%;
+                      margin-left: 0;
+                    "
+                  >
+                    Agendar Cita
+                  </button>
+                </form>
+              </div>
+            </div>
+            <div style="flex: 1">
+              <div class="card">
+                <h2>Citas Próximas</h2>
+                <div id="citas-lista">
+                  <!-- Las citas se renderizarán aquí -->
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top: 20px">
+            <h2>Filtros de Búsqueda</h2>
+            <label>Mostrar citas de:</label>
+            <select
+              id="filtro-citas"
+              onchange="renderCitas()"
+              style="width: 100%; margin-bottom: 10px"
+            >
+              <option value="todas">Todas</option>
+              <option value="pendientes">Pendientes</option>
+              <option value="hoy">Hoy</option>
+              <option value="semana">Esta Semana</option>
+              <option value="mes">Este Mes</option>
+              <option value="proximas">Próximas 7 Días</option>
+            </select>
+          </div>
+        </div>
+
+        <!--USUARIOS -->
+        <div id="usuarios-tab-panel" class="hidden">
+          <div class="card">
+            <h2>Usuarios</h2>
+            <form onsubmit="agregarUsuario(event)">
+              <label>Usuario: </label
+              ><input
+                type="text"
+                id="user-nombre"
+                required
+                style="width: calc(100% - 130px)"
+              />
+              <label> Rol: </label>
+              <select id="user-rol" style="width: calc(100% - 130px)">
+                <option value="cajero">Cajero</option>
+                <option value="propietario">Propietario</option>
+              </select>
+              <label> Contraseña: </label>
+              <input
+                type="password"
+                id="user-pass"
+                required
+                style="width: calc(100% - 130px)"
+              />
+              <button type="submit">Agregar</button>
+            </form>
+            <div id="user-err" class="error"></div>
+            <ul id="usuarios-lista" style="list-style: none; padding: 0"></ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contenedor para la factura imprimible (oculto por defecto) -->
+    <div id="printable-invoice-container" class="hidden">
+      <div id="printable-invoice">
+        <!-- El contenido de la factura se insertará aquí -->
+        <button onclick="closePrintableInvoice()">Cerrar Vista Previa</button>
+        <button onclick="window.print()">Imprimir</button>
+      </div>
+    </div>
+
+    <!-- Contenedor para el historial imprimible (oculto por defecto) -->
+    <div id="printable-history-container" class="hidden">
+      <div id="printable-history">
+        <!-- El contenido del historial se insertará aquí -->
+        <button onclick="closePrintableHistory()">Cerrar Vista Previa</button>
+        <button onclick="window.print()">Imprimir</button>
+      </div>
+    </div>
+
+    <!-- NUEVO: Contenedor para el reporte diario imprimible (oculto por defecto) -->
+    <div id="printable-report-container" class="hidden">
+      <div id="printable-report">
+        <!-- El contenido del reporte se insertará aquí -->
+        <button onclick="closePrintableReport()">Cerrar Vista Previa</button>
+        <button onclick="window.print()">Imprimir</button>
+      </div>
+    </div>
+
+    <!-- Incluye las librerías de Firebase que necesitas -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+    <script>
+      // --- Configuración de Firebase ---
+      const firebaseConfig = {
+        apiKey: "AIzaSyAaDEVNhQ0iaq9885jBx99nGRh3qfJf-6g",
+        authDomain: "medra-villalona.firebaseapp.com",
+        projectId: "medra-villalona",
+        storageBucket: "medra-villalona.firebasestorage.app",
+        messagingSenderId: "1010377344195",
+        appId: "1:1010377344195:web:0c8f4dc304d648cc014e76",
+      };
+
+      // Inicializa Firebase
+      firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+      const auth = firebase.auth();
+
+      // --- Referencias a elementos HTML ---
+      // Asegúrate de que estos IDs coincidan con los que pusiste en tu HTML en el Paso 2
+      const reportDateInput = document.getElementById("reportDate");
+      const loadReportsBtn = document.getElementById("loadReportsBtn");
+      const dailyReportsContainer = document.getElementById(
+        "dailyReportsContainer",
+      ); // Este lo usamos para referencia, no manipulación directa
+      const currentReportDateSpan =
+        document.getElementById("currentReportDate");
+      const salesList = document.getElementById("salesList");
+      const printReportsBtn = document.getElementById("printReportsBtn");
+
+      // --- Función para formatear una fecha a "YYYY-MM-DD" para el input type="date" ---
+      function formatDateToInput(date) {
+        const year = date.getFullYear();
+        const month = (date.getMonth() + 1).toString().padStart(2, "0"); // Los meses son 0-indexados
+        const day = date.getDate().toString().padStart(2, "0");
+        return `${year}-${month}-${day}`;
+      }
+
+      // --- Función para formatear la fecha para mostrar en el título ---
+      function formatDisplayDate(date) {
+        const options = {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        };
+        return date.toLocaleDateString("es-ES", options);
+      }
+
+      // --- Función principal para cargar y mostrar los reportes (VERSIÓN MEJORADA) ---
+      // Esta versión usa onSnapshot para tiempo real y muestra el nombre del cliente.
+
+      // =======================================================
+      //   REEMPLAZA TU FUNCIÓN VIEJA POR TODA ESTA FUNCIÓN NUEVA
+      // =======================================================
+      function fetchAndDisplayReports(selectedDate) {
+        // Verificaciones de seguridad (esto ya lo tenías)
+        if (!salesList || !currentReportDateSpan) {
+          console.error("Elementos HTML para reportes no encontrados.");
+          return;
+        }
+
+        salesList.innerHTML = "<li>Cargando reportes...</li>";
+        currentReportDateSpan.textContent = formatDisplayDate(selectedDate);
+
+        const startOfDay = new Date(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate(),
+          0,
+          0,
+          0,
+        );
+        const endOfDay = new Date(
+          selectedDate.getFullYear(),
+          selectedDate.getMonth(),
+          selectedDate.getDate(),
+          23,
+          59,
+          59,
+          999,
+        );
+        const firestoreStart =
+          firebase.firestore.Timestamp.fromDate(startOfDay);
+        const firestoreEnd = firebase.firestore.Timestamp.fromDate(endOfDay);
+        const ventasRef = db.collection("ventasDelDia");
+        const q = ventasRef
+          .where("fechaCreacion", ">=", firestoreStart)
+          .where("fechaCreacion", "<=", firestoreEnd)
+          .orderBy("fechaCreacion", "desc");
+
+        if (unsubscribeReporte) {
+          unsubscribeReporte();
+        }
+
+        // Aquí empieza el listener
+        unsubscribeReporte = q.onSnapshot(
+          (querySnapshot) => {
+            // <<< ¡MIRA! AQUÍ ESTÁ LA LÍNEA QUE NO ENCONTRABAS (1 de 3) >>>
+            // Aquí "creamos" la variable para sumar.
+            let totalDelDia = 0;
+
+            salesList.innerHTML = "";
+
+            if (querySnapshot.empty) {
+              salesList.innerHTML =
+                "<li>No hay ventas registradas para esta fecha.</li>";
+            } else {
+              querySnapshot.forEach((doc) => {
+                const venta = doc.data();
+
+                // <<< ¡MIRA! AQUÍ ESTÁ LA LÍNEA QUE NO ENCONTRABAS (2 de 3) >>>
+                // Aquí "sumamos" el total de cada venta.
+                // Usamos parseFloat para asegurarnos de que es un número
+                totalDelDia += parseFloat(venta.total) || 0;
+
+                // (Aquí va todo tu código para crear las tarjetas bonitas)
+                // =======================================================
+                //   REEMPLAZA EL BLOQUE QUE CREA LA TARJETA POR ESTE
+                // =======================================================
+
+                // 1. Primero, definimos el HTML del botón de edición
+                let editButtonHTML = ""; // Por defecto, no hay botón
+
+                // 2. Revisamos el rol. ¡ASEGÚRATE DE QUE 'propietario' SEA EL ROL CORRECTO!
+                if (
+                  usuarioActual &&
+                  (usuarioActual.rol === "propietario" ||
+                    usuarioActual.rol === "administrador")
+                ) {
+                  // Si es admin/propietario, creamos el botón
+                  // Usamos el doc.id para saber QUÉ factura editar
+                  editButtonHTML = `<button class="edit-btn" onclick="abrirModalEdicion('${doc.id}')">Editar</button>`;
+                }
+
+                // 3. Ahora creamos el <li>
+                const li = document.createElement("li");
+                li.classList.add("venta-card-container");
+
+                // 4. Y creamos el HTML de la tarjeta, AÑADIENDO el botón
+                li.innerHTML = `
+                      <div class="venta-card">
+                          <div class="card-detail">
+                              <p class="cliente-info">
+                                  <strong>Cliente:</strong> ${
+                                    venta.clienteNombre || "Sin nombre"
+                                  }
+                              </p>
+                              <p class="total-info">
+                                  <strong>TOTAL:</strong> <span class="monto">RD$${
+                                    venta.total
+                                      ? venta.total.toFixed(2)
+                                      : "0.00"
+                                  }</span>
+                              </p>
+                          </div>
+                          <div class="card-footer">
+                              <small>
+                                  Registrado por: ${
+                                    venta.generadoPorNombre || "N/A"
+                                  } -
+                                  ${
+                                    venta.fechaCreacion
+                                      ? venta.fechaCreacion
+                                          .toDate()
+                                          .toLocaleTimeString("es-ES")
+                                      : "N/A"
+                                  }
+                              </small>
+                              <div class="footer-actions"> <small class="venta-hora">
+                                      ${
+                                        venta.fechaCreacion
+                                          ? venta.fechaCreacion
+                                              .toDate()
+                                              .toLocaleDateString("es-ES")
+                                          : "N/A"
+                                      }
+                                  </small>
+                                  ${editButtonHTML} </div>
+                          </div>
+                      </div>
+                  `;
+                salesList.appendChild(li);
+                // =======================================================
+                //                 FIN DEL REEMPLAZO
+                // =======================================================
+              });
+            } // Fin del 'else'
+
+            // <<< ¡MIRA! AQUÍ ESTÁ LA LÍNEA QUE NO ENCONTRABAS (3 de 3) >>>
+            // Y aquí "buscamos" la caja HTML y "escribimos" el total.
+            const totalElement = document.getElementById("salesTotal");
+            if (totalElement) {
+              totalElement.textContent = `Total del día: RD$${totalDelDia.toFixed(
+                2,
+              )}`;
+            } else {
+              console.error(
+                "ERROR: No se encontró el HTML con id='salesTotal'.",
+              );
+            }
+          },
+          (error) => {
+            // (Esto es el manejo de errores, ya lo tenías)
+            console.error("Error al obtener documentos: ", error);
+            salesList.innerHTML = "<li>Error al cargar los reportes.</li>";
+          },
+        );
+      }
+      // =======================================================
+      //                 FIN DE LA FUNCIÓN
+      // =======================================================
+
+      // =======================================================
+      //   NUEVAS FUNCIONES PARA EL MODAL DE EDICIÓN
+      // =======================================================
+
+      // Esta es la función que SÍ teníamos (pero estaba vacía)
+      // Ahora, la llenaremos para que muestre el modal.
+      // =======================================================
+      // =======================================================
+      //   REEMPLAZA EL CONTENIDO DE abrirModalEdicion(facturaId)
+      // =======================================================
+      async function abrirModalEdicion(facturaId) {
+        console.log("Abriendo modal para editar factura:", facturaId);
+
+        // Referencias a elementos del modal
+        const modal = document.getElementById("modal-edicion-backdrop");
+        const inputNombre = document.getElementById("editClienteNombre");
+        const displayFacturaId = document.getElementById(
+          "edit-factura-display-id",
+        );
+        const inputFacturaId = document.getElementById("editFacturaId");
+        const tbodyProductos = document.getElementById(
+          "editProductosFacturaBody",
+        );
+
+        // Mostrar el modal e inicializar
+        if (modal) {
+          modal.classList.remove("hidden");
+        }
+        inputFacturaId.value = facturaId;
+        displayFacturaId.textContent = facturaId.substring(0, 8);
+        tbodyProductos.innerHTML =
+          '<tr><td colspan="5" style="text-align: center;">Buscando datos de la factura...</td></tr>';
+        inputNombre.value = "Cargando...";
+
+        try {
+          // 1. Buscar la factura en Firebase
+          const docRef = db.collection("ventasDelDia").doc(facturaId);
+          const doc = await docRef.get();
+
+          if (doc.exists) {
+            const venta = doc.data();
+
+            // 2. Rellenar campos de cabecera
+            inputNombre.value = venta.clienteNombre || "Cliente sin nombre";
+
+            // 3. Rellenar la tabla de productos (la parte más importante)
+            let productosHTML = "";
+            let subtotalCalculado = 0;
+
+            // Recorremos el array de productos guardado en la factura
+            venta.items.forEach((p, index) => {
+              const subtotal = p.precio * p.cantidad;
+              subtotalCalculado += subtotal;
+
+              productosHTML += `
+                      <tr data-producto-index="${index}">
+                          <td>${p.nombre}</td>
+                          <td><input type="number" value="${p.cantidad}" min="1" step="1" onchange="recalcularTotalesEdicion(${index})"></td>
+                          <td>${p.precio.toFixed(2)}</td>
+                          <td>${subtotal.toFixed(2)}</td>
+                          <td>
+                              <button type="button" onclick="eliminarProductoEdicion(${index})">Eliminar</button>
+                          </td>
+                      </tr>
+                  `;
+            });
+
+            tbodyProductos.innerHTML = productosHTML;
+
+            // 4. Actualizar los totales (Asumiendo 18% ITBIS para ejemplo)
+            actualizarDisplayTotalesEdicion(subtotalCalculado);
+
+            // Almacenar temporalmente los datos originales de la venta
+            // Esto es CRÍTICO para saber qué productos se vendieron antes de corregir.
+            window.productosEnEdicion = venta.items;
+            window.ventaOriginal = venta;
+          } else {
+            alert("Error: La factura que intenta editar no existe.");
+            cerrarModalEdicion();
+          }
+        } catch (error) {
+          console.error(
+            "Error al cargar los datos de la factura para edición:",
+            error,
+          );
+          alert("Ocurrió un error al cargar los datos. Verifique la conexión.");
+          cerrarModalEdicion();
+        }
+      }
+      // =======================================================
+
+      // --- Inicialización y Event Listeners ---
+      // Este bloque asegura que el código se ejecuta solo cuando el DOM está completamente cargado.
+      document.addEventListener("DOMContentLoaded", () => {
+        const today = new Date();
+        // Establecer la fecha actual en el input del calendario
+        if (reportDateInput) {
+          reportDateInput.value = formatDateToInput(today);
+        }
+
+        // Cargar los reportes del día actual al cargar la página
+        // Solo si los elementos HTML existen
+        if (
+          reportDateInput &&
+          loadReportsBtn &&
+          salesList &&
+          currentReportDateSpan
+        ) {
+          fetchAndDisplayReports(today);
+
+          // Event listener para el botón de cargar reportes
+          loadReportsBtn.addEventListener("click", () => {
+            const selectedDateStr = reportDateInput.value;
+            if (selectedDateStr) {
+              // new Date() con un string "YYYY-MM-DD" puede tener problemas de zona horaria.
+              // Es mejor construir la fecha a partir de sus componentes para asegurar que
+              // siempre se interprete como el inicio de ese día en la zona horaria local.
+              const [year, month, day] = selectedDateStr.split("-").map(Number);
+              const userSelectedDate = new Date(year, month - 1, day); // month - 1 porque los meses son 0-indexados
+
+              fetchAndDisplayReports(userSelectedDate);
+            } else {
+              alert("Por favor, selecciona una fecha.");
+            }
+          });
+        } else {
+          console.warn(
+            "Algunos elementos HTML necesarios para la funcionalidad de reportes no fueron encontrados. Verifique los IDs.",
+          );
+        }
+
+        // Event listener para el botón de Imprimir/Guardar
+        if (printReportsBtn) {
+          printReportsBtn.addEventListener("click", () => {
+            // Por ahora, solo lanzamos la ventana de impresión del navegador
+            window.print();
+            // Para guardar como PDF, el usuario normalmente selecciona "Guardar como PDF"
+            // en el cuadro de diálogo de impresión. Para una solución más avanzada,
+            // se necesitarían librerías adicionales (lo veremos en otro paso si lo necesitas).
+          });
+        }
+      });
+
+      // --- NUEVO: Manejador global de errores para prevenir logout accidental ---
+      window.addEventListener("error", (event) => {
+        console.error("ERROR GLOBAL NO CAPTURADO:", event.error);
+        console.error("Mensaje:", event.message);
+        console.error("Archivo:", event.filename);
+        console.error("Línea:", event.lineno);
+        // No hacer nada más - solo loguear para debug
+      });
+
+      window.addEventListener("unhandledrejection", (event) => {
+        console.error("PROMISE REJECTION NO CAPTURADA:", event.reason);
+        // No hacer nada más - solo loguear para debug
+      });
+
+      // --- Variables Globales ---
+      let usuarios = [
+        { nombre: "propietario", rol: "propietario", pass: "1234" },
+        { nombre: "cajero", rol: "cajero", pass: "1234" },
+      ];
+      let usuarioActual = null;
+
+      let unsubscribeVentas = null; // Variable para gestionar el listener de ventas de Firestore
+      let unsubscribeReporte = null; // <--- ¡AÑADE ESTA LÍNEA!
+
+      let productos = [
+        { id: 1, nombre: "Serum Vitamina C", precio: 950, stock: 20 },
+        { id: 2, nombre: "Bloqueador Solar", precio: 500, stock: 35 },
+        { id: 3, nombre: "Jabón Facial", precio: 350, stock: 15 },
+      ];
+
+      let servicios = [
+        {
+          id: 1,
+          nombre: "Limpieza facial",
+          precio: 1500,
+          descripcion: "Duración: 1 hora.",
+        },
+        {
+          id: 2,
+          nombre: "Peeling químico",
+          precio: 2700,
+          descripcion: "Tratamiento profundo.",
+        },
+        {
+          id: 3,
+          nombre: "Depilación laser",
+          precio: 1000,
+          descripcion: "Por zona.",
+        },
+      ];
+
+      let clientes = []; // Se llenará desde Firestore
+      let carrito = [];
+      let ventasDiarias = []; // Por ahora sigue siendo local
+      let clienteSeleccionado = null; // Se establecerá una vez los clientes sean cargados
+
+      // Variable para desuscribirse del listener de clientes de Firestore
+      let unsubscribeClientes = null;
+
+      // --- NUEVO: Función para actualizar la visibilidad de la UI según el rol ---
+      function updateUIPermissions() {
+        const isOwner = usuarioActual && usuarioActual.rol === "propietario"; // Mantén isOwner si lo usas en otras partes
+
+        // --- Clientes Tab ---
+        const btnAddClient = document.getElementById("btn-add-client");
+        const panelAddClient = document.getElementById(
+          "nuevo-cliente-panel-clientes",
+        );
+
+        // Si hay un usuario logeado (cajero o propietario), muestra el botón. Si no, ocúltalo.
+        if (btnAddClient)
+          btnAddClient.style.display = usuarioActual ? "" : "none";
+        // El panel de agregar cliente se oculta por defecto en CSS, y se muestra con mostrarNuevoClienteClientes()
+        // No necesitamos una lógica adicional para ocultarlo aquí basada en el rol.
+        // Si quieres que el formulario se oculte siempre si no hay usuario, podrías añadir:
+        if (panelAddClient && !usuarioActual)
+          panelAddClient.classList.add("hidden");
+
+        // --- Inventario Tab ---
+        const formAddProduct = document.getElementById("form-add-product");
+        if (formAddProduct)
+          formAddProduct.style.display = isOwner ? "" : "none";
+
+        // --- Servicios Tab ---
+        const formAddService = document.getElementById("form-add-service");
+        if (formAddService)
+          formAddService.style.display = isOwner ? "" : "none";
+
+        // --- Pestaña de Usuarios ---
+        const usuariosTabButton = document.getElementById("usuarios-tab");
+        if (usuariosTabButton)
+          usuariosTabButton.style.display = isOwner ? "" : "none";
+
+        // --- Pestaña Agenda: mostrar a cualquier usuario autenticado ---
+        const agendaTabButton = document.querySelector(
+          '.tab-btn[data-tab="agenda"]',
+        );
+        if (agendaTabButton)
+          agendaTabButton.style.display = usuarioActual ? "" : "none";
+
+        // Opcional: Redirigir si un cajero está en una pestaña restringida al cambiar de rol o login
+        const currentActiveTabButton = document.querySelector(
+          ".tabs .tab-btn.active",
+        );
+        if (currentActiveTabButton) {
+          const currentTabName = currentActiveTabButton.dataset.tab;
+          if (
+            !isOwner &&
+            (currentTabName === "inventario" ||
+              currentTabName === "servicios" ||
+              currentTabName === "usuarios" ||
+              currentTabName === "reporte")
+          ) {
+            showTab("facturacion"); // Redirigir al cajero a la pestaña de facturación
+          }
+        }
+      }
+
+      // --- NUEVO: Función para restablecer permisos de UI al cerrar sesión ---
+      function resetUIPermissions() {
+        const btnAddClient = document.getElementById("btn-add-client");
+        const panelAddClient = document.getElementById(
+          "nuevo-cliente-panel-clientes",
+        );
+        if (btnAddClient) btnAddClient.style.display = ""; // Por defecto visible
+        if (panelAddClient) panelAddClient.classList.add("hidden"); // Ocultar el panel de formulario por defecto
+
+        const formAddProduct = document.getElementById("form-add-product");
+        if (formAddProduct) formAddProduct.style.display = "";
+
+        const formAddService = document.getElementById("form-add-service");
+        if (formAddService) formAddService.style.display = "";
+
+        const usuariosTabButton = document.getElementById("usuarios-tab");
+        if (usuariosTabButton) usuariosTabButton.style.display = "none"; // Por defecto oculto
+
+        // Asegurar que la pestaña Agenda quede visible por defecto (se controlará al iniciar sesión)
+        const agendaTabButton = document.querySelector(
+          '.tab-btn[data-tab="agenda"]',
+        );
+        if (agendaTabButton) agendaTabButton.style.display = "";
+      }
+
+      // --- Función de Login (con fallback local para pruebas) ---
+      document.getElementById("login-form").onsubmit = function (e) {
+        e.preventDefault();
+        let usernameInput = document.getElementById("login-user").value.trim();
+        let password = document.getElementById("login-pass").value.trim();
+
+        document.getElementById("login-error").textContent = ""; // Limpiar errores previos
+
+        // CREDENTIALS DE PRUEBA (FALLBACK LOCAL)
+        const testCredentials = [
+          {
+            username: "admin",
+            password: "1234",
+            role: "propietario",
+            email: "admin@test.com",
+          },
+          {
+            username: "cajero",
+            password: "1234",
+            role: "cajero",
+            email: "cajero@test.com",
+          },
+          {
+            username: "recepcion",
+            password: "1234",
+            role: "cajero",
+            email: "recepcion@test.com",
+          },
+        ];
+
+        // Verificar credenciales locales primero
+        const localUser = testCredentials.find(
+          (u) => u.username === usernameInput && u.password === password,
+        );
+
+        if (localUser) {
+          // LOGIN LOCAL EXITOSO
+          console.log("Login local exitoso:", localUser.username);
+
+          // Intentar autenticación anónima para permitir operaciones en Firestore
+          auth
+            .signInAnonymously()
+            .then((cred) => {
+              const firebaseUser = cred.user;
+              usuarioActual = {
+                uid: firebaseUser.uid,
+                nombre: localUser.username,
+                rol: localUser.role,
+                email: localUser.email,
+                anon: true,
+              };
+
+              // Ocultar panel de login y mostrar principal
+              document.getElementById("login-panel").style.display = "none";
+              document.getElementById("main-panel").classList.remove("hidden");
+
+              // Actualizar UI
+              document.getElementById("usuario-nombre").textContent =
+                localUser.username;
+              document.getElementById("usuario-rol").textContent =
+                localUser.role;
+
+              // Permisos y carga de datos
+              updateUIPermissions();
+              showTab("facturacion");
+              cargarDatosInicialesUI();
+            })
+            .catch((err) => {
+              console.warn("No se pudo autenticar anónimamente:", err);
+              // Continuar en modo local sin auth (las operaciones Firestore pueden fallar)
+              usuarioActual = {
+                uid: "local_" + localUser.username,
+                nombre: localUser.username,
+                rol: localUser.role,
+                email: localUser.email,
+                anon: false,
+              };
+
+              document.getElementById("login-panel").style.display = "none";
+              document.getElementById("main-panel").classList.remove("hidden");
+              document.getElementById("usuario-nombre").textContent =
+                localUser.username;
+              document.getElementById("usuario-rol").textContent =
+                localUser.role;
+
+              updateUIPermissions();
+              showTab("facturacion");
+              cargarDatosInicialesUI();
+            });
+
+          return;
+        }
+
+        // Si falla local, intentar con Firebase Firestore
+        db.collection("userProfiles")
+          .where("username", "==", usernameInput)
+          .get()
+          .then((querySnapshot) => {
+            if (querySnapshot.empty) {
+              document.getElementById("login-error").textContent =
+                "Nombre de usuario o contraseña incorrectos. (Prueba: admin/1234 o cajero/1234)";
+              return Promise.reject(
+                new Error("auth/user-not-found-by-username"),
+              );
+            }
+
+            const userProfileDoc = querySnapshot.docs[0];
+            const userProfileData = userProfileDoc.data();
+            const userEmail = userProfileData.email;
+
+            return auth
+              .signInWithEmailAndPassword(userEmail, password)
+              .then((userCredential) => {
+                const firebaseUser = userCredential.user;
+                console.log("Usuario autenticado:", firebaseUser.email);
+
+                const userRole = userProfileData.role;
+                const currentUsername = userProfileData.username;
+
+                // --- IMPORTANTE: Asignar usuarioActual ---
+                usuarioActual = {
+                  uid: firebaseUser.uid,
+                  nombre: currentUsername,
+                  rol: userRole,
+                  email: userEmail,
+                };
+                console.log("Usuario actual después de login:", usuarioActual);
+
+                // Ocultar panel de login y mostrar principal
+                document.getElementById("login-panel").style.display = "none";
+                document
+                  .getElementById("main-panel")
+                  .classList.remove("hidden");
+
+                // Actualizar UI con nombre y rol
+                document.getElementById("usuario-nombre").textContent =
+                  currentUsername;
+                document.getElementById("usuario-rol").textContent = userRole;
+
+                // --- LLAMADA A LA FUNCIÓN DE PERMISOS DESPUÉS DE ESTABLECER usuarioActual ---
+                updateUIPermissions();
+                showTab("facturacion"); // Asegurarse de que inicia en Facturación
+
+                cargarDatosInicialesUI(); // Cargar datos después del login
+              });
+          })
+          .catch((error) => {
+            const errorCode = error.code;
+            const errorMessage = error.message;
+            console.error(
+              "Error de autenticación/búsqueda:",
+              errorCode,
+              errorMessage,
+            );
+
+            if (
+              errorCode === "auth/wrong-password" ||
+              errorCode === "auth/user-not-found" ||
+              error.message === "auth/user-not-found-by-username" ||
+              errorCode === "auth/invalid-credential" // Para errores generales de credenciales
+            ) {
+              document.getElementById("login-error").textContent =
+                "Nombre de usuario o contraseña incorrectos.";
+            } else if (errorCode === "auth/invalid-email") {
+              document.getElementById("login-error").textContent =
+                "El formato del correo electrónico es inválido.";
+            } else {
+              document.getElementById("login-error").textContent =
+                "Error al iniciar sesión: " + errorMessage;
+            }
+          });
+      };
+
+      // --- Función de Cierre de Sesión ---
+      function logout() {
+        auth
+          .signOut()
+          .then(() => {
+            console.log("Sesión cerrada");
+            if (unsubscribeClientes) {
+              unsubscribeClientes();
+              unsubscribeClientes = null;
+            }
+            // ¡Añade esta línea!
+            if (unsubscribeVentas) {
+              unsubscribeVentas();
+              unsubscribeVentas = null;
+            }
+            // ... el resto de tu función logout ...
+
+            usuarioActual = null; // Limpiar usuario actual
+            clientes = []; // Limpiar clientes locales
+            carrito = []; // Limpiar carrito
+            ventasDiarias = []; // Limpiar ventas (si se persisten en Firestore, habría que recargarlas)
+
+            // Restablecer la UI
+            document.getElementById("main-panel").classList.add("hidden");
+            document.getElementById("login-panel").style.display = "";
+            document.getElementById("login-user").value = "";
+            document.getElementById("login-pass").value = "";
+            document.getElementById("login-error").textContent = "";
+            renderCarrito(); // Actualizar el carrito en la UI
+            filterItems(); // Limpiar la búsqueda de ítems
+            // Ocultar paneles imprimibles si estuvieran visibles
+            document
+              .getElementById("printable-invoice-container")
+              .classList.add("hidden");
+            document
+              .getElementById("printable-history-container")
+              .classList.add("hidden");
+
+            // --- LLAMADA PARA RESTABLECER PERMISOS DE UI AL CERRAR SESIÓN ---
+            resetUIPermissions();
+          })
+          .catch((error) => {
+            console.error("Error al cerrar sesión:", error);
+          });
+      }
+
+      // --- Gestión de Pestañas ---
+      function showTab(tab) {
+        // --- NUEVO: Redirigir cajero si intenta acceder a pestañas restringidas ---
+        if (usuarioActual && usuarioActual.rol !== "propietario") {
+          if (
+            tab === "inventario" ||
+            tab === "servicios" ||
+            tab === "usuarios"
+          ) {
+            alert("No tiene permisos para acceder a esta sección.");
+            tab = "facturacion"; // Redirigir al cajero a la pestaña de facturación
+          }
+        }
+
+        // Ocultar todas las pestañas
+        [
+          "facturacion-tab",
+          "clientes-tab",
+          "inventario-tab",
+          "servicios-tab",
+          "reporte-tab",
+          "agenda-tab",
+          "usuarios-tab-panel",
+        ].forEach((id) => {
+          document.getElementById(id).classList.add("hidden");
+        });
+
+        // Activar la pestaña correcta
+        let targetTabId =
+          tab === "usuarios" ? "usuarios-tab-panel" : tab + "-tab";
+        document.getElementById(targetTabId).classList.remove("hidden");
+
+        // Quitar la clase 'active' de todos los botones de pestaña
+        document
+          .querySelectorAll(".tab-btn")
+          .forEach((b) => b.classList.remove("active"));
+
+        // Añadir la clase 'active' al botón de la pestaña actual
+        // Se asume que los botones tienen el data-tab correspondiente
+        const tabButton = document.querySelector(`.tab-btn[data-tab="${tab}"]`);
+        if (tabButton) {
+          tabButton.classList.add("active");
+        }
+
+        if (tab === "facturacion") {
+          filterItems(); // Recargar la lista de ítems al volver a facturación
+        } else if (tab === "clientes") {
+          // fetchClientes() ya maneja la renderización
+        } else if (tab === "inventario") {
+          renderInventario(); // Recargar inventario al activar pestaña
+        } else if (tab === "servicios") {
+          renderServiciosAdmin(); // Recargar servicios al activar pestaña
+        } else if (tab === "reporte") {
+          renderReporte(); // Recargar reporte al activar pestaña
+        } else if (tab === "agenda") {
+          renderCitas(); // Cargar citas al activar pestaña
+          renderSelectClientesAgenda(); // Llenar dropdown de clientes
+          renderSelectServicios(); // Llenar dropdown de servicios
+        } else if (tab === "usuarios") {
+          renderUsuarios(); // Recargar usuarios al activar pestaña
+        }
+      }
+
+      // --- Funciones de Carga y Actualización de Clientes (Firestore) ---
+      function fetchClientes() {
+        if (unsubscribeClientes) {
+          unsubscribeClientes(); // Desuscribirse de listeners anteriores
+        }
+
+        // Configurar un listener en tiempo real para la colección "clientes"
+        unsubscribeClientes = db
+          .collection("clientes")
+          .orderBy("nombre") // Opcional: ordenar por nombre para mejor UX
+          .onSnapshot(
+            (snapshot) => {
+              clientes = []; // Limpiar el array local antes de rellenarlo
+              snapshot.forEach((doc) => {
+                clientes.push({ id: doc.id, ...doc.data() }); // doc.id es el ID de Firestore
+              });
+              console.log("Clientes cargados desde Firestore:", clientes);
+
+              renderClientes(); // Vuelve a renderizar la lista visible de clientes
+              renderSelectClientes(); // Vuelve a renderizar el <select> de clientes
+
+              // Asegurar que clienteSeleccionado sea válido o seleccionar el primero
+              if (
+                clientes.length > 0 &&
+                (!clienteSeleccionado ||
+                  !clientes.some((c) => c.id === clienteSeleccionado))
+              ) {
+                clienteSeleccionado = clientes[0].id;
+                renderSelectClientes(); // Re-renderizar para reflejar la selección
+                carrito = []; // Limpiar carrito para el nuevo cliente seleccionado
+                renderCarrito();
+              } else if (clientes.length === 0) {
+                clienteSeleccionado = null;
+                carrito = []; // Si no hay clientes, vaciar carrito
+                renderCarrito();
+              }
+            },
+            (error) => {
+              console.error(
+                "Error al cargar clientes desde Firestore: ",
+                error,
+              );
+              // Podrías mostrar un mensaje de error al usuario aquí
+            },
+          );
+      }
+
+      // --- FACTURACION ---
+      // Función unificada para filtrar productos y servicios
+      function filterItems() {
+        const searchTerm = document
+          .getElementById("item-search-input")
+          .value.toLowerCase();
+        const resultsUl = document.getElementById("item-search-results");
+        resultsUl.innerHTML = ""; // Limpiar resultados anteriores
+
+        if (!usuarioActual) {
+          // Si no hay usuario logeado, no mostrar nada
+          const li = document.createElement("li");
+          li.textContent = "Inicie sesión para buscar ítems.";
+          resultsUl.appendChild(li);
+          return;
+        }
+
+        const allItems = [
+          ...productos.map((p) => ({ ...p, tipo: "producto" })),
+          ...servicios.map((s) => ({ ...s, tipo: "servicio" })),
+        ];
+
+        const filteredItems = allItems.filter((item) =>
+          item.nombre.toLowerCase().includes(searchTerm),
+        );
+
+        if (filteredItems.length === 0 && searchTerm.length > 0) {
+          const li = document.createElement("li");
+          li.textContent = "No se encontraron resultados.";
+          resultsUl.appendChild(li);
+        } else if (filteredItems.length === 0 && searchTerm.length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "Escriba para buscar productos o servicios.";
+          resultsUl.appendChild(li);
+        } else {
+          filteredItems.forEach((item) => {
+            const li = document.createElement("li");
+            li.textContent = `${
+              item.tipo === "producto" ? "🛒 Producto:" : "💆 Servicio:"
+            } ${item.nombre} — RD$${item.precio.toFixed(2)}`;
+            li.onclick = () => {
+              agregarAlCarrito(item);
+              document.getElementById("item-search-input").value = ""; // Limpiar input después de añadir
+              filterItems(); // Volver a mostrar todos los ítems o limpiar resultados
+            };
+            resultsUl.appendChild(li);
+          });
+        }
+      }
+
+      function agregarAlCarrito(item) {
+        if (
+          !usuarioActual ||
+          (usuarioActual.rol !== "propietario" &&
+            usuarioActual.rol !== "cajero")
+        ) {
+          alert("No tiene permisos para agregar ítems al carrito.");
+          return;
+        }
+
+        const idx = carrito.findIndex(
+          (ci) => ci.id === item.id && ci.tipo === item.tipo,
+        );
+        if (idx >= 0) {
+          if (
+            item.tipo === "producto" &&
+            carrito[idx].cantidad + 1 > getStock(item.id)
+          ) {
+            alert("No hay suficiente stock.");
+            return;
+          }
+          carrito[idx].cantidad += 1;
+        } else {
+          carrito.push({ ...item, cantidad: 1 });
+        }
+        renderCarrito();
+      }
+      function quitarDelCarrito(idx) {
+        carrito[idx].cantidad -= 1;
+        if (carrito[idx].cantidad <= 0) carrito.splice(idx, 1);
+        renderCarrito();
+      }
+      function renderCarrito() {
+        const ul = document.getElementById("carrito-lista");
+        ul.innerHTML = "";
+        let subtotal = 0;
+        if (carrito.length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "El carrito está vacío.";
+          ul.appendChild(li);
+        } else {
+          carrito.forEach((item, idx) => {
+            subtotal += item.precio * item.cantidad;
+            const li = document.createElement("li");
+            li.textContent = `${item.tipo === "producto" ? "🛒" : "💆"} ${
+              item.nombre
+            } — RD$${item.precio.toFixed(2)} x ${item.cantidad}`;
+            const quitar = document.createElement("button");
+            quitar.textContent = "-";
+            quitar.onclick = () => quitarDelCarrito(idx);
+            li.appendChild(quitar);
+            ul.appendChild(li);
+          });
+        }
+        document.getElementById("subtotal").textContent =
+          `Subtotal: RD$${subtotal.toFixed(2)}`;
+        document.getElementById("btn-factura").disabled =
+          carrito.length === 0 || !clienteSeleccionado;
+      }
+      function getStock(id) {
+        const prod = productos.find((p) => p.id === id);
+        return prod ? prod.stock : 0;
+      }
+
+      // --- CLIENTES ---
+      function renderClientes() {
+        const ul = document.getElementById("clientes-lista");
+        ul.innerHTML = "";
+        if (clientes.length === 0) {
+          const li = document.createElement("li");
+          li.textContent = "No hay clientes registrados.";
+          ul.appendChild(li);
+        } else {
+          clientes.forEach((cli) => {
+            const li = document.createElement("li");
+            const isOwner =
+              usuarioActual && usuarioActual.rol === "propietario";
+            const editDeleteButtons = isOwner
+              ? `
+              <button onclick="abrirModalEditarCliente('${cli.id}')" style="margin-left: 10px; background-color: #ffc107; color: #333;">Editar</button>
+              <button onclick="eliminarCliente('${cli.id}')" style="margin-left: 5px; background-color: #dc3545; color: white;">Eliminar</button>
+            `
+              : "";
+            li.innerHTML = `
+                <details>
+                  <summary style="font-weight: bold; cursor: pointer; padding: 5px 0;">
+                    ${cli.nombre} — Tel: ${cli.tel || "N/A"}
+                    <button onclick="printClientHistory('${
+                      cli.id
+                    }')" style="margin-left: 10px;">Imprimir Historial</button>
+                    ${editDeleteButtons}
+                  </summary>
+                  <div style="margin-left: 20px; margin-top: 10px; border-left: 2px solid #eee; padding-left: 10px;">
+                    <p>Dirección: ${cli.dir || "N/A"}</p>
+                    <h4>Historial de Compras/Servicios:</h4>
+                    ${
+                      cli.historial && cli.historial.length > 0
+                        ? `<ul style="list-style: none; padding: 0;">${cli.historial
+                            .map(
+                              (h) =>
+                                `<li>${h.fecha} - ${
+                                  h.tipo === "producto" ? "🛒" : "💆"
+                                } ${h.nombre} x${h.cantidad || 1} RD$${(
+                                  h.precio * (h.cantidad || 1)
+                                ).toFixed(2)}</li>`,
+                            )
+                            .join("")}</ul>`
+                        : "<p>Sin compras/servicios.</p>"
+                    }
+                  </div>
+                </details>
+              `;
+            ul.appendChild(li);
+          });
+        }
+      }
+
+      function renderSelectClientes() {
+        const sel = document.getElementById("select-cliente");
+        const oldSelectedClientId = sel.value; // Guardar el ID seleccionado antes de actualizar
+        sel.innerHTML = "";
+        if (clientes.length === 0) {
+          const opt = document.createElement("option");
+          opt.value = "";
+          opt.textContent = "No hay clientes registrados";
+          opt.disabled = true;
+          sel.appendChild(opt);
+          document.getElementById("btn-factura").disabled = true;
+        } else {
+          clientes.forEach((cli) => {
+            let opt = document.createElement("option");
+            opt.value = cli.id; // Usar el ID de Firestore (string)
+            opt.textContent = cli.nombre;
+            sel.appendChild(opt);
+          });
+
+          // Intentar reseleccionar el cliente que estaba seleccionado, o el primero
+          if (
+            oldSelectedClientId &&
+            clientes.some((c) => c.id === oldSelectedClientId)
+          ) {
+            clienteSeleccionado = oldSelectedClientId;
+          } else {
+            clienteSeleccionado = clientes[0].id;
+          }
+          sel.value = clienteSeleccionado;
+          sel.onchange = () => {
+            if (clienteSeleccionado !== sel.value) {
+              // Solo si el cliente ha cambiado
+              clienteSeleccionado = sel.value;
+              carrito = []; // Limpiar carrito al cambiar de cliente
+              renderCarrito(); // Actualizar la vista del carrito
+              console.log(
+                "Cliente seleccionado cambiado a:",
+                clienteSeleccionado,
+              );
+            }
+          };
+          // Se vuelve a evaluar el estado del botón de factura al actualizar el selector de clientes
+          document.getElementById("btn-factura").disabled =
+            carrito.length === 0 || !clienteSeleccionado;
+        }
+      }
+
+      // Funciones para el formulario "Agregar Cliente" en la pestaña CLIENTES
+      function mostrarNuevoClienteClientes() {
+        document
+          .getElementById("nuevo-cliente-panel-clientes")
+          .classList.remove("hidden");
+        document.getElementById("cli-nombre-clientes").focus();
+      }
+
+      function ocultarNuevoClienteClientes() {
+        document
+          .getElementById("nuevo-cliente-panel-clientes")
+          .classList.add("hidden");
+        document.getElementById("cli-err-clientes").textContent = "";
+        document.getElementById("cli-nombre-clientes").value = "";
+        document.getElementById("cli-tel-clientes").value = "";
+        document.getElementById("cli-dir-clientes").value = "";
+      }
+
+      function agregarCliente(e) {
+        e.preventDefault();
+        // ¡El bloque de verificación de rol que estaba aquí, ha sido ELIMINADO!
+
+        const nombreInput = document.getElementById("cli-nombre-clientes");
+        const telInput = document.getElementById("cli-tel-clientes");
+        const dirInput = document.getElementById("cli-dir-clientes");
+        const errorDiv = document.getElementById("cli-err-clientes");
+
+        let nombre = nombreInput.value.trim();
+        if (nombre === "") {
+          errorDiv.textContent = "El nombre es requerido.";
+          return;
+        }
+        let tel = telInput.value.trim();
+        let dir = dirInput.value.trim();
+
+        const nuevoClienteData = {
+          nombre: nombre,
+          tel: tel,
+          dir: dir,
+          historial: [],
+        };
+
+        db.collection("clientes")
+          .add(nuevoClienteData)
+          .then((docRef) => {
+            console.log("Cliente agregado con ID: ", docRef.id);
+            ocultarNuevoClienteClientes();
+          })
+          .catch((error) => {
+            console.error("Error al agregar cliente a Firestore: ", error);
+            errorDiv.textContent = "Error al agregar cliente: " + error.message;
+          });
+      }
+
+      // --- NUEVO: Funciones para editar y eliminar clientes ---
+      async function abrirModalEditarCliente(clienteId) {
+        console.log("Abriendo modal para editar cliente:", clienteId);
+        const modal = document.getElementById("modal-editar-cliente-backdrop");
+        const inputId = document.getElementById("edit-cliente-id");
+        const inputNombre = document.getElementById("edit-cliente-nombre");
+        const inputTel = document.getElementById("edit-cliente-tel");
+        const inputDir = document.getElementById("edit-cliente-dir");
+        const errorDiv = document.getElementById("edit-cliente-error");
+
+        try {
+          const docRef = db.collection("clientes").doc(clienteId);
+          const doc = await docRef.get();
+
+          if (doc.exists) {
+            const cliente = doc.data();
+            inputId.value = clienteId;
+            inputNombre.value = cliente.nombre || "";
+            inputTel.value = cliente.tel || "";
+            inputDir.value = cliente.dir || "";
+            errorDiv.textContent = "";
+            modal.classList.remove("hidden");
+            console.log("Modal de cliente abierto correctamente");
+          } else {
+            console.error("El cliente no existe en Firestore");
+            alert("Error: El cliente no existe.");
+          }
+        } catch (error) {
+          console.error("Error al cargar cliente para edición:", error);
+          errorDiv.textContent =
+            "Error al cargar los datos del cliente: " + error.message;
+        }
+      }
+
+      function cerrarModalEditarCliente() {
+        const modal = document.getElementById("modal-editar-cliente-backdrop");
+        if (modal) {
+          modal.classList.add("hidden");
+          console.log("Modal de cliente cerrado");
+        }
+      }
+
+      // Manejador del formulario de edición
+      async function guardarClienteEditado(e) {
+        if (e) {
+          e.preventDefault();
+        }
+
+        console.log("Guardando cambios del cliente...");
+
+        const clienteId = document.getElementById("edit-cliente-id").value;
+        const nombre = document
+          .getElementById("edit-cliente-nombre")
+          .value.trim();
+        const tel = document.getElementById("edit-cliente-tel").value.trim();
+        const dir = document.getElementById("edit-cliente-dir").value.trim();
+        const errorDiv = document.getElementById("edit-cliente-error");
+
+        if (!clienteId) {
+          console.error("ID del cliente no disponible");
+          errorDiv.textContent = "Error: ID del cliente no disponible.";
+          return;
+        }
+
+        if (nombre === "") {
+          errorDiv.textContent = "El nombre es requerido.";
+          return;
+        }
+
+        try {
+          console.log(
+            "Iniciando actualización en Firestore para cliente:",
+            clienteId,
+          );
+          const updateData = {
+            nombre: nombre,
+            tel: tel,
+            dir: dir,
+          };
+
+          await db.collection("clientes").doc(clienteId).update(updateData);
+
+          console.log("Cliente actualizado exitosamente en Firestore");
+          errorDiv.textContent = "";
+
+          // Pequeño delay para asegurar que Firestore procese el cambio
+          setTimeout(() => {
+            cerrarModalEditarCliente();
+            console.log("Modal cerrado después de guardar");
+          }, 500);
+        } catch (error) {
+          console.error("Error al actualizar cliente:", error);
+          console.error("Código de error:", error.code);
+          console.error("Mensaje de error:", error.message);
+          errorDiv.textContent =
+            "Error al guardar los cambios: " + error.message;
+        }
+      }
+
+      // Configurar el listener cuando el documento esté listo
+      function configurarFormularioEditarCliente() {
+        try {
+          const formEditarCliente = document.getElementById(
+            "form-editar-cliente",
+          );
+          if (formEditarCliente) {
+            console.log(
+              "Configurando evento submit del formulario de edición de cliente",
+            );
+            formEditarCliente.onsubmit = guardarClienteEditado;
+          } else {
+            console.warn("Elemento form-editar-cliente no encontrado");
+          }
+        } catch (error) {
+          console.error("Error al configurar formulario:", error);
+        }
+      }
+
+      // Ejecutar configuración cuando el DOM esté listo
+      if (document.readyState === "loading") {
+        document.addEventListener(
+          "DOMContentLoaded",
+          configurarFormularioEditarCliente,
+        );
+      } else {
+        configurarFormularioEditarCliente();
+      }
+
+      async function eliminarCliente(clienteId) {
+        // Confirmar antes de eliminar
+        if (
+          !confirm(
+            "¿Está seguro de que desea eliminar este cliente? Esta acción no se puede deshacer.",
+          )
+        ) {
+          return;
+        }
+
+        try {
+          await db.collection("clientes").doc(clienteId).delete();
+          console.log("Cliente eliminado exitosamente");
+        } catch (error) {
+          console.error("Error al eliminar cliente:", error);
+          alert("Error al eliminar cliente: " + error.message);
+        }
+      }
+
+      // --- NUEVO: Funciones para editar productos ---
+      function abrirModalEditarProducto(productoId) {
+        const producto = productos.find((p) => p.id === productoId);
+        if (!producto) {
+          alert("Error: Producto no encontrado.");
+          return;
+        }
+
+        document.getElementById("edit-producto-id").value = productoId;
+        document.getElementById("edit-producto-nombre").value = producto.nombre;
+        document.getElementById("edit-producto-precio").value = producto.precio;
+        document.getElementById("edit-producto-stock").value = producto.stock;
+        document.getElementById("edit-producto-descripcion").value =
+          producto.descripcion || "";
+        document.getElementById("edit-producto-error").textContent = "";
+        document
+          .getElementById("modal-editar-producto-backdrop")
+          .classList.remove("hidden");
+      }
+
+      function cerrarModalEditarProducto() {
+        document
+          .getElementById("modal-editar-producto-backdrop")
+          .classList.add("hidden");
+      }
+
+      async function guardarProductoEditado(e) {
+        if (e) {
+          e.preventDefault();
+        }
+
+        const productoId = parseInt(
+          document.getElementById("edit-producto-id").value,
+        );
+        const nombre = document
+          .getElementById("edit-producto-nombre")
+          .value.trim();
+        const precio = parseFloat(
+          document.getElementById("edit-producto-precio").value,
+        );
+        const stock = parseInt(
+          document.getElementById("edit-producto-stock").value,
+        );
+        const descripcion = document
+          .getElementById("edit-producto-descripcion")
+          .value.trim();
+        const errorDiv = document.getElementById("edit-producto-error");
+
+        if (nombre === "" || precio <= 0 || stock < 0) {
+          errorDiv.textContent = "Datos inválidos: nombre, precio o stock.";
+          return;
+        }
+
+        try {
+          const index = productos.findIndex((p) => p.id === productoId);
+          if (index !== -1) {
+            productos[index] = {
+              ...productos[index],
+              nombre,
+              precio,
+              stock,
+              descripcion,
+            };
+            console.log("Producto actualizado exitosamente");
+            errorDiv.textContent = "";
+            cerrarModalEditarProducto();
+            renderInventario();
+            filterItems();
+          }
+        } catch (error) {
+          console.error("Error al actualizar producto:", error);
+          errorDiv.textContent =
+            "Error al guardar los cambios: " + error.message;
+        }
+      }
+
+      // Configurar listener del formulario de edición de producto
+      function configurarFormularioEditarProducto() {
+        const formEditarProducto = document.getElementById(
+          "form-editar-producto",
+        );
+        if (formEditarProducto) {
+          formEditarProducto.onsubmit = guardarProductoEditado;
+        }
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener(
+          "DOMContentLoaded",
+          configurarFormularioEditarProducto,
+        );
+      } else {
+        configurarFormularioEditarProducto();
+      }
+
+      // --- NUEVO: Funciones para editar servicios ---
+      function abrirModalEditarServicio(servicioId) {
+        const servicio = servicios.find((s) => s.id === servicioId);
+        if (!servicio) {
+          alert("Error: Servicio no encontrado.");
+          return;
+        }
+
+        document.getElementById("edit-servicio-id").value = servicioId;
+        document.getElementById("edit-servicio-nombre").value = servicio.nombre;
+        document.getElementById("edit-servicio-precio").value = servicio.precio;
+        document.getElementById("edit-servicio-descripcion").value =
+          servicio.descripcion || "";
+        document.getElementById("edit-servicio-error").textContent = "";
+        document
+          .getElementById("modal-editar-servicio-backdrop")
+          .classList.remove("hidden");
+      }
+
+      function cerrarModalEditarServicio() {
+        document
+          .getElementById("modal-editar-servicio-backdrop")
+          .classList.add("hidden");
+      }
+
+      async function guardarServicioEditado(e) {
+        if (e) {
+          e.preventDefault();
+        }
+
+        const servicioId = parseInt(
+          document.getElementById("edit-servicio-id").value,
+        );
+        const nombre = document
+          .getElementById("edit-servicio-nombre")
+          .value.trim();
+        const precio = parseFloat(
+          document.getElementById("edit-servicio-precio").value,
+        );
+        const descripcion = document
+          .getElementById("edit-servicio-descripcion")
+          .value.trim();
+        const errorDiv = document.getElementById("edit-servicio-error");
+
+        if (nombre === "" || precio <= 0) {
+          errorDiv.textContent = "Datos inválidos: nombre o precio.";
+          return;
+        }
+
+        try {
+          const index = servicios.findIndex((s) => s.id === servicioId);
+          if (index !== -1) {
+            servicios[index] = {
+              ...servicios[index],
+              nombre,
+              precio,
+              descripcion,
+            };
+            console.log("Servicio actualizado exitosamente");
+            errorDiv.textContent = "";
+            cerrarModalEditarServicio();
+            renderServiciosAdmin();
+            filterItems();
+          }
+        } catch (error) {
+          console.error("Error al actualizar servicio:", error);
+          errorDiv.textContent =
+            "Error al guardar los cambios: " + error.message;
+        }
+      }
+
+      // Configurar listener del formulario de edición de servicio
+      function configurarFormularioEditarServicio() {
+        const formEditarServicio = document.getElementById(
+          "form-editar-servicio",
+        );
+        if (formEditarServicio) {
+          formEditarServicio.onsubmit = guardarServicioEditado;
+        }
+      }
+
+      if (document.readyState === "loading") {
+        document.addEventListener(
+          "DOMContentLoaded",
+          configurarFormularioEditarServicio,
+        );
+      } else {
+        configurarFormularioEditarServicio();
+      }
+
+      // --- FACTURA E HISTORIAL IMPRIMIBLE ---
+      async function generarFactura() {
+        if (
+          !usuarioActual ||
+          (usuarioActual.rol !== "propietario" &&
+            usuarioActual.rol !== "cajero")
+        ) {
+          alert("No tiene permisos para generar facturas.");
+          return;
+        }
+        if (carrito.length === 0) {
+          alert("El carrito está vacío. Agregue productos o servicios.");
+          return;
+        }
+        if (!clienteSeleccionado) {
+          alert("Por favor, seleccione un cliente.");
+          return;
+        }
+
+        let cli = clientes.find((c) => c.id === clienteSeleccionado);
+        if (!cli) {
+          alert("El cliente seleccionado no existe.");
+          return;
+        }
+
+        let fecha = new Date().toLocaleString("es-DO", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+          second: "2-digit",
+        });
+
+        let facturaContent = `
+            <h2 style="margin-bottom: 5px;">FACTURA DE VENTA</h2>
+            <p style="text-align: center; font-size: 0.9em; margin-bottom: 20px;">Sistema Integral de Facturación Estética</p>
+            <p><strong>Fecha:</strong> ${fecha}</p>
+            <p><strong>Cliente:</strong> ${cli.nombre}</p>
+            <p><strong>Teléfono:</strong> ${cli.tel || "N/A"}</p>
+            <p><strong>Dirección:</strong> ${cli.dir || "N/A"}</p>
+            <hr style="margin: 20px 0;">
+            <h3 style="margin-bottom: 10px;">Detalle de Ítems:</h3>
+            <ul style="border: none;">
+          `;
+        let subtotal = 0;
+        let nuevoHistorialItems = [];
+
+        carrito.forEach((item) => {
+          const itemTotal = item.precio * (item.cantidad || 1);
+          facturaContent += `
+              <li style="border-bottom: 1px dotted #ccc; padding: 5px 0;">
+                ${item.nombre} x ${item.cantidad} — RD$${item.precio.toFixed(
+                  2,
+                )} c/u = RD$${itemTotal.toFixed(2)}
+              </li>
+            `;
+          subtotal += itemTotal;
+          nuevoHistorialItems.push({
+            id: item.id,
+            nombre: item.nombre,
+            precio: item.precio,
+            cantidad: item.cantidad,
+            tipo: item.tipo,
+            fecha: fecha,
+          });
+
+          if (item.tipo === "producto") {
+            let prod = productos.find((p) => p.id === item.id);
+            if (prod) prod.stock -= item.cantidad; // Esto sigue siendo local
+          }
+        });
+        facturaContent += `</ul><hr style="margin: 20px 0;"><p class="total">Subtotal: RD$${subtotal.toFixed(
+          2,
+        )}</p>`;
+        facturaContent += `<p class="total">Total a Pagar: RD$${subtotal.toFixed(
+          2,
+        )}</p>`;
+
+        document.getElementById("printable-invoice").innerHTML =
+          facturaContent +
+          `
+          <div style="text-align: center; margin-top: 40px; font-size: 0.9em;">
+              <p>Gracias por su preferencia.</p>
+          </div>
+          <div style="text-align: center; margin-top: 50px;">
+              <button onclick="closePrintableInvoice()">Cerrar Vista Previa</button>
+              <button onclick="window.print()">Imprimir</button>
+          </div>
+          `;
+        document
+          .getElementById("printable-invoice-container")
+          .classList.remove("hidden");
+        document.getElementById("main-panel").classList.add("hidden"); // Ocultar el panel principal
+
+        try {
+          const historialActualizado = [
+            ...(cli.historial || []),
+            ...nuevoHistorialItems,
+          ];
+          await db
+            .collection("clientes")
+            .doc(cli.id)
+            .update({ historial: historialActualizado });
+          console.log(
+            "Historial del cliente actualizado en Firestore para:",
+            cli.nombre,
+          );
+        } catch (error) {
+          console.error(
+            "Error al actualizar historial del cliente en Firestore:",
+            error,
+          );
+          alert(
+            "Error al guardar el historial del cliente. Ver consola para más detalles.",
+          );
+        }
+
+        // ...
+        const nuevaVenta = {
+          clienteId: cli.id,
+          clienteNombre: cli.nombre,
+          // ¡ASÍ SÍ!
+          // 1. Usa el nombre de campo correcto: "fechaCreacion"
+          // 2. Guarda la fecha actual como un Timestamp, no como texto.
+          fechaCreacion: firebase.firestore.Timestamp.now(),
+
+          // (Opcional) Puedes guardar el string de fecha si lo usas para la factura impresa
+          fechaString: fecha,
+
+          items: JSON.parse(JSON.stringify(carrito)),
+          total: subtotal,
+          generadoPorUid: usuarioActual.uid,
+          generadoPorNombre: usuarioActual.nombre,
+        };
+        // ...
+
+        try {
+          // ¡Esta es la línea clave que guarda en Firestore!
+          const docRef = await db.collection("ventasDelDia").add(nuevaVenta);
+          console.log("Venta registrada en Firestore con ID:", docRef.id);
+        } catch (error) {
+          console.error("Error al registrar la venta en Firestore:", error);
+          alert("Error al registrar la venta. Ver consola para más detalles.");
+          // Aquí podrías querer añadir lógica para notificar si la venta no se pudo guardar
+          // o revertir el historial del cliente si no se desea una inconsistencia.
+        }
+
+        // Ya no necesitamos agregar al array local `ventasDiarias` aquí,
+        // porque la lectura del reporte se hará directamente desde Firestore.
+        // Si tienes alguna lógica más abajo que use `ventasDiarias`, la reevaluaremos luego.
+
+        carrito.length = 0;
+        renderCarrito();
+        filterItems(); // Refrescar la búsqueda de ítems
+      }
+
+      function closePrintableInvoice() {
+        document
+          .getElementById("printable-invoice-container")
+          .classList.add("hidden");
+        document.getElementById("main-panel").classList.remove("hidden");
+      }
+
+      function printClientHistory(clientId) {
+        const cli = clientes.find((c) => c.id === clientId);
+        if (!cli) {
+          alert("Cliente no encontrado.");
+          return;
+        }
+
+        let historyContent = `
+            <h2 style="margin-bottom: 5px;">HISTORIAL DE CLIENTE</h2>
+            <p style="text-align: center; font-size: 0.9em; margin-bottom: 20px;">${
+              cli.nombre
+            }</p>
+            <p><strong>Cliente:</strong> ${cli.nombre}</p>
+            <p><strong>Teléfono:</strong> ${cli.tel || "N/A"}</p>
+            <p><strong>Dirección:</strong> ${cli.dir || "N/A"}</p>
+            <hr style="margin: 20px 0;">
+            <h3 style="margin-bottom: 10px;">Detalle de Historial:</h3>
+            <ul style="border: none;">
+          `;
+
+        if (cli.historial && cli.historial.length > 0) {
+          cli.historial.forEach((h) => {
+            historyContent += `
+                <li style="border-bottom: 1px dotted #ccc; padding: 5px 0;">
+                  ${h.fecha} - ${h.tipo === "producto" ? "🛒" : "💆"} ${
+                    h.nombre
+                  } x${h.cantidad || 1} — RD$${(
+                    h.precio * (h.cantidad || 1)
+                  ).toFixed(2)}
+                </li>
+              `;
+          });
+        } else {
+          historyContent += "<li>Sin compras o servicios registrados.</li>";
+        }
+        historyContent += `</ul>`;
+
+        document.getElementById("printable-history").innerHTML =
+          historyContent +
+          `
+          <div style="text-align: center; margin-top: 50px;">
+              <button onclick="closePrintableHistory()">Cerrar Vista Previa</button>
+              <button onclick="window.print()">Imprimir</button>
+          </div>
+          `;
+        document
+          .getElementById("printable-history-container")
+          .classList.remove("hidden");
+        document.getElementById("main-panel").classList.remove("hidden");
+      }
+
+      function closePrintableHistory() {
+        document
+          .getElementById("printable-history-container")
+          .classList.add("hidden");
+        document.getElementById("main-panel").classList.remove("hidden");
+      }
+
+      // NUEVO: Función para generar la vista previa imprimible del reporte diario
+      function printDailyReport() {
+        // 1. Obtener el contenido del reporte actual de la UI
+        const reporteList = document.getElementById("salesList");
+        const reporteTotalElement = document.getElementById("salesTotal"); // Asumiendo que añadiste un elemento para el total
+        const reporteDateSpan = document.getElementById("currentReportDate");
+
+        // Si no tienes el elemento 'salesTotal' en tu HTML, usa esta línea:
+        const reporteTotal = reporteTotalElement
+          ? reporteTotalElement.textContent
+          : "Total no disponible";
+
+        let reportContent = `
+          <h2 style="margin-bottom: 5px;">REPORTE DIARIO DE VENTAS</h2>
+          <p style="text-align: center; font-size: 0.9em; margin-bottom: 20px;">
+              **Fecha Reporte:** ${
+                reporteDateSpan
+                  ? reporteDateSpan.textContent
+                  : "Fecha no especificada"
+              }
+          </p>
+          <p style="text-align: center; font-size: 0.9em; margin-bottom: 20px;">
+              Generado por: ${
+                usuarioActual ? usuarioActual.nombre : "Sistema"
+              } (${usuarioActual ? usuarioActual.rol : "N/A"})
+          </p>
+          <hr style="margin: 20px 0;">
+          <h3 style="margin-bottom: 10px;">Detalle de Ventas:</h3>
+          <ul style="border: none;">
+      `;
+
+        // 2. Iterar sobre los elementos de la lista generada por fetchAndDisplayReports
+        const listItems = reporteList.querySelectorAll("li");
+
+        if (listItems.length > 0) {
+          listItems.forEach((item) => {
+            // Limpiamos y formateamos el texto para impresión
+            let itemText = item.textContent.trim().replace(/\s\s+/g, " ");
+
+            reportContent += `
+                  <li style="border-bottom: 1px dotted #ccc; padding: 5px 0;">
+                      ${itemText}
+                  </li>
+              `;
+          });
+        } else {
+          reportContent += "<li>No hay ventas registradas en el reporte.</li>";
+        }
+
+        reportContent += `</ul><hr style="margin: 20px 0;"><p class="total"><strong>${reporteTotal}</strong></p>`;
+
+        // 3. Insertar el contenido y mostrar la vista previa
+        document.getElementById("printable-report").innerHTML =
+          reportContent +
+          `
+          <div style="text-align: center; margin-top: 50px;">
+              <button onclick="closePrintableReport()">Cerrar Vista Previa</button>
+              <button onclick="window.print()">Imprimir</button>
+          </div>
+          `;
+        document
+          .getElementById("printable-report-container")
+          .classList.remove("hidden");
+        document.getElementById("main-panel").classList.add("hidden"); // Ocultar el panel principal
+      }
+
+      // NUEVO: Función para cerrar la vista previa imprimible del reporte diario
+      function closePrintableReport() {
+        document
+          .getElementById("printable-report-container")
+          .classList.add("hidden");
+        document.getElementById("main-panel").classList.remove("hidden");
+      }
+
+      // --- INVENTARIO ---
+      function renderInventario() {
+        const ul = document.getElementById("inv-prod-lista");
+        ul.innerHTML = "";
+        if (!usuarioActual || usuarioActual.rol !== "propietario") {
+          const li = document.createElement("li");
+          li.textContent = "Acceso restringido.";
+          ul.appendChild(li);
+          return;
+        }
+        productos.forEach((prod) => {
+          const li = document.createElement("li");
+          const descripcion = prod.descripcion ? ` — ${prod.descripcion}` : "";
+          li.innerHTML = `<b>${
+            prod.nombre
+          }</b> — Precio: RD$${prod.precio.toFixed(2)} — Stock: ${prod.stock}${descripcion}`;
+
+          const editBtn = document.createElement("button");
+          editBtn.textContent = "Editar";
+          editBtn.style.backgroundColor = "#ffc107";
+          editBtn.style.color = "#333";
+          editBtn.onclick = () => {
+            abrirModalEditarProducto(prod.id);
+          };
+          li.appendChild(editBtn);
+
+          const btn = document.createElement("button");
+          btn.textContent = "Eliminar";
+          btn.onclick = () => {
+            productos = productos.filter((p) => p.id !== prod.id);
+            renderInventario();
+            filterItems(); // Actualizar la búsqueda de ítems
+          };
+          li.appendChild(btn);
+          ul.appendChild(li);
+        });
+      }
+      function agregarProducto(e) {
+        e.preventDefault();
+        const prodErrDiv = document.getElementById("prod-err");
+        prodErrDiv.textContent = ""; // Limpiar error previo
+        if (!usuarioActual || usuarioActual.rol !== "propietario") {
+          prodErrDiv.textContent = "No tiene permisos para agregar productos.";
+          return;
+        }
+        let nombre = document.getElementById("prod-nombre").value.trim();
+        let precio = +document.getElementById("prod-precio").value;
+        let stock = +document.getElementById("prod-stock").value;
+        let descripcion = document
+          .getElementById("prod-descripcion")
+          .value.trim();
+        if (nombre === "" || precio <= 0 || stock < 0) {
+          prodErrDiv.textContent = "Datos inválidos: nombre, precio o stock.";
+          return;
+        }
+        productos.push({
+          id: Math.max(0, ...productos.map((p) => p.id)) + 1,
+          nombre,
+          precio,
+          stock,
+          descripcion,
+        });
+        e.target.reset();
+        renderInventario();
+        filterItems(); // Actualizar la búsqueda de ítems
+      }
+
+      // --- SERVICIOS ---
+      function renderServiciosAdmin() {
+        const ul = document.getElementById("serv-lista");
+        ul.innerHTML = "";
+        if (!usuarioActual || usuarioActual.rol !== "propietario") {
+          const li = document.createElement("li");
+          li.textContent = "Acceso restringido.";
+          ul.appendChild(li);
+          return;
+        }
+        servicios.forEach((serv) => {
+          const li = document.createElement("li");
+          li.innerHTML = `<b>${
+            serv.nombre
+          }</b> — Precio: RD$${serv.precio.toFixed(2)} — ${
+            serv.descripcion || ""
+          }`;
+
+          const editBtn = document.createElement("button");
+          editBtn.textContent = "Editar";
+          editBtn.style.backgroundColor = "#ffc107";
+          editBtn.style.color = "#333";
+          editBtn.onclick = () => {
+            abrirModalEditarServicio(serv.id);
+          };
+          li.appendChild(editBtn);
+
+          const btn = document.createElement("button");
+          btn.textContent = "Eliminar";
+          btn.onclick = () => {
+            servicios = servicios.filter((s) => s.id !== serv.id);
+            renderServiciosAdmin();
+            filterItems(); // Actualizar la búsqueda de ítems
+          };
+          li.appendChild(btn);
+          ul.appendChild(li);
+        });
+      }
+      function agregarServicio(e) {
+        e.preventDefault();
+        const servErrDiv = document.getElementById("serv-err");
+        servErrDiv.textContent = ""; // Limpiar error previo
+        if (!usuarioActual || usuarioActual.rol !== "propietario") {
+          servErrDiv.textContent = "No tiene permisos para agregar servicios.";
+          return;
+        }
+        let nombre = document.getElementById("serv-nombre").value.trim();
+        let precio = +document.getElementById("serv-precio").value;
+        let descripcion = document.getElementById("serv-desc").value.trim();
+        if (nombre === "" || precio <= 0) {
+          servErrDiv.textContent = "Datos inválidos: nombre o precio.";
+          return;
+        }
+        servicios.push({
+          id: Math.max(0, ...servicios.map((s) => s.id)) + 1,
+          nombre,
+          precio,
+          descripcion,
+        });
+        e.target.reset();
+        renderServiciosAdmin();
+        filterItems(); // Actualizar la búsqueda de ítems
+      }
+
+      // --- REPORTE ---
+      function renderReporte() {
+        const ul = document.getElementById("reporte-lista");
+        ul.innerHTML = ""; // Limpiamos la lista para mostrar datos frescos
+        document.getElementById("reporte-total").textContent = `Cargando...`;
+
+        // Desuscribirse del listener anterior si existe para evitar duplicados
+        if (unsubscribeVentas) {
+          unsubscribeVentas();
+          unsubscribeVentas = null;
+        }
+
+        // Tus reglas de seguridad ya controlan quién puede ver el reporte,
+        // pero podemos añadir un mensaje aquí si el usuario no está logeado.
+        if (!usuarioActual) {
+          ul.innerHTML =
+            "<li>Por favor, inicie sesión para ver el reporte.</li>";
+          document.getElementById("reporte-total").textContent =
+            `Total del día: RD$0.00`;
+          return;
+        }
+
+        // Configurar un listener en tiempo real para la colección "ventasDelDia"
+        unsubscribeVentas = db
+          .collection("ventasDelDia")
+          .orderBy("fecha", "desc") // Ordenamos las ventas por fecha (la más reciente primero)
+          .onSnapshot(
+            (snapshot) => {
+              let totalDia = 0;
+              ul.innerHTML = ""; // Limpiar la lista antes de volver a renderizar con los nuevos datos
+
+              if (snapshot.empty) {
+                const li = document.createElement("li");
+                li.textContent = "No hay ventas registradas.";
+                ul.appendChild(li);
+              } else {
+                snapshot.forEach((doc) => {
+                  const venta = doc.data();
+                  const li = document.createElement("li");
+                  li.innerHTML = `
+                              <b>${venta.fecha}</b> - Cliente: ${
+                                venta.clienteNombre
+                              } - RD$${venta.total.toFixed(2)}
+                              <br> <span class="small">Registrado por: ${
+                                venta.generadoPorNombre || "N/A"
+                              }</span>
+                          `;
+                  // Agregamos el botón de eliminar solo si el usuario actual es 'propietario'
+                  if (usuarioActual.rol === "propietario") {
+                    const btnEliminar = document.createElement("button");
+                    btnEliminar.textContent = "Eliminar";
+                    // Creamos una función auxiliar para la eliminación, la definiremos después.
+                    btnEliminar.onclick = () => eliminarVenta(doc.id);
+                    li.appendChild(btnEliminar);
+                  }
+                  ul.appendChild(li);
+                  totalDia += venta.total;
+                });
+              }
+              document.getElementById("reporte-total").textContent =
+                `Total del día: RD$${totalDia.toFixed(2)}`;
+            },
+            (error) => {
+              console.error(
+                "Error al cargar ventas del día desde Firestore:",
+                error,
+              );
+              ul.innerHTML = "<li>Error al cargar el reporte.</li>";
+              document.getElementById("reporte-total").textContent =
+                `Total del día: RD$0.00`;
+            },
+          );
+      }
+
+      async function eliminarVenta(ventaId) {
+        // Confirmación para evitar eliminaciones accidentales
+        if (
+          confirm(
+            "¿Está seguro de que desea eliminar esta venta de forma permanente?",
+          )
+        ) {
+          try {
+            // Tus reglas de seguridad de Firestore se encargarán de verificar que solo un propietario pueda hacer esto.
+            await db.collection("ventasDelDia").doc(ventaId).delete();
+            console.log("Venta eliminada de Firestore:", ventaId);
+            // No necesitamos volver a llamar a renderReporte() aquí porque el listener `onSnapshot`
+            // en renderReporte() detectará automáticamente el cambio y actualizará la UI.
+          } catch (error) {
+            console.error(
+              "Error al intentar eliminar la venta de Firestore:",
+              error,
+            );
+            alert(
+              "Error al eliminar la venta. Verifique los permisos o la consola para más detalles.",
+            );
+          }
+        }
+      }
+
+      // --- USUARIOS (PROPIETARIO) ---
+      function renderUsuarios() {
+        const ul = document.getElementById("usuarios-lista");
+        ul.innerHTML = "";
+        if (!usuarioActual || usuarioActual.rol !== "propietario") {
+          const li = document.createElement("li");
+          li.textContent = "Acceso restringido.";
+          ul.appendChild(li);
+          return;
+        }
+        usuarios.forEach((u) => {
+          const li = document.createElement("li");
+          li.textContent = `${u.nombre} — ${u.rol}`;
+          if (u.nombre !== "propietario") {
+            // El propietario no puede eliminarse a sí mismo
+            const btn = document.createElement("button");
+            btn.textContent = "Eliminar";
+            btn.onclick = () => {
+              usuarios = usuarios.filter((us) => us.nombre !== u.nombre);
+              renderUsuarios();
+            };
+            li.appendChild(btn);
+          }
+          ul.appendChild(li);
+        });
+      }
+      function agregarUsuario(e) {
+        e.preventDefault();
+        if (!usuarioActual || usuarioActual.rol !== "propietario") {
+          document.getElementById("user-err").textContent =
+            "No tiene permisos para agregar usuarios.";
+          return;
+        }
+        let nombre = document.getElementById("user-nombre").value.trim();
+        let rol = document.getElementById("user-rol").value;
+        let pass = document.getElementById("user-pass").value;
+        if (nombre === "" || rol === "" || pass === "") {
+          document.getElementById("user-err").textContent = "Datos inválidos";
+          return;
+        }
+        if (usuarios.find((u) => u.nombre === nombre)) {
+          document.getElementById("user-err").textContent = "Usuario ya existe";
+          return;
+        }
+        // ADVERTENCIA: Esta parte solo agrega usuarios al array local 'usuarios'.
+        // Para que un usuario pueda iniciar sesión con Firebase Auth, deberías:
+        // 1. Crear el usuario en Firebase Authentication con auth.createUserWithEmailAndPassword(email, pass).
+        // 2. Luego guardar el perfil con db.collection("userProfiles").doc(UID_DEL_NUEVO_USUARIO).set({username: nombre, email: email, role: rol}).
+        // Actualmente, el 'pass' se ignora para la autenticación real.
+        usuarios.push({ nombre, rol, pass });
+        e.target.reset();
+        document.getElementById("user-err").textContent =
+          "Usuario agregado localmente. Para persistencia con autenticación, integra Firebase Auth.";
+        renderUsuarios();
+      }
+
+      // --- Función para Cargar Datos Iniciales de la UI después del Login ---
+      function cargarDatosInicialesUI() {
+        console.log("Cargando datos iniciales de la UI...");
+        fetchClientes(); // Carga clientes y renderiza elementos dependientes
+        fetchCitas(); // Carga citas desde Firestore
+        filterItems(); // Inicializa la lista de búsqueda de ítems
+        renderCarrito(); // Asegura que el carrito se muestre (vacío)
+        // Las demás funciones de renderizado se llamarán al cambiar de pestaña
+      }
+
+      // --- Manejo del Estado de Autenticación (para persistir el login al refrescar) ---
+      auth.onAuthStateChanged((user) => {
+        if (user) {
+          // Si el usuario está autenticado, obtenemos su perfil de Firestore
+          db.collection("userProfiles")
+            .doc(user.uid)
+            .get()
+            .then((doc) => {
+              if (doc.exists) {
+                const userProfileData = doc.data();
+                usuarioActual = {
+                  uid: user.uid,
+                  nombre: userProfileData.username,
+                  rol: userProfileData.role,
+                  email: user.email,
+                };
+                console.log(
+                  "Usuario actual (onAuthStateChanged):",
+                  usuarioActual,
+                );
+
+                document.getElementById("login-panel").style.display = "none";
+                document
+                  .getElementById("main-panel")
+                  .classList.remove("hidden");
+                document.getElementById("usuario-nombre").textContent =
+                  usuarioActual.nombre;
+                const rol = doc.data().role;
+                document.getElementById("usuario-rol").textContent =
+                  usuarioActual.rol;
+
+                // Mostrar botón solo si es administrador
+                if (rol === "propietario") {
+                  document.getElementById("btnCambiarPass").style.display =
+                    "inline-block";
+                  // Si el botón del cajero lo agregaste con id, ejemplo btnCambiarPassCajero:
+                  document.getElementById(
+                    "btnCambiarPassCajero",
+                  ).style.display = "inline-block";
+                } else {
+                  document.getElementById("btnCambiarPass").style.display =
+                    "none";
+                  document.getElementById(
+                    "btnCambiarPassCajero",
+                  ).style.display = "none";
+                }
+
+                // --- LLAMADA A LA FUNCIÓN DE PERMISOS AQUÍ TAMBIÉN ---
+                updateUIPermissions();
+                showTab("facturacion"); // Asegurarse de que inicia en Facturación
+
+                cargarDatosInicialesUI();
+              } else {
+                console.warn(
+                  "Perfil de usuario no encontrado en Firestore para UID:",
+                  user.uid,
+                );
+                auth.signOut(); // Si no hay perfil, forzar cierre de sesión
+              }
+            })
+            .catch((error) => {
+              console.error("Error al obtener perfil de usuario:", error);
+              auth.signOut(); // Forzar cierre de sesión en caso de error
+            });
+        } else {
+          // No hay usuario logeado, mostrar panel de login
+          console.log("No hay usuario autenticado.");
+          document.getElementById("main-panel").classList.add("hidden");
+          document.getElementById("login-panel").style.display = "";
+          document.getElementById("login-error").textContent = "";
+
+          // Limpiar datos locales al no haber usuario
+          if (unsubscribeClientes) {
+            unsubscribeClientes();
+            unsubscribeClientes = null;
+          }
+          usuarioActual = null;
+          clientes = [];
+          carrito = [];
+          ventasDiarias = [];
+          renderCarrito();
+          filterItems();
+
+          // ...
+          // Ocultar paneles imprimibles si estuvieran visibles
+          document
+            .getElementById("printable-invoice-container")
+            .classList.add("hidden");
+          document
+            .getElementById("printable-history-container")
+            .classList.add("hidden");
+          // ¡Añade esta línea!
+          document
+            .getElementById("printable-report-container")
+            .classList.add("hidden");
+
+          // ... el resto de tu función logout ...
+
+          // --- LLAMADA PARA RESTABLECER PERMISOS DE UI ---
+          resetUIPermissions();
+        }
+      });
+
+      // --- VARIABLES GLOBALES PARA AGENDA ---
+      let citas = []; // Se llenará desde Firestore
+      var unsubscribeCitas = null;
+
+      // --- FUNCIONES DE AGENDA ---
+      function renderSelectClientesAgenda() {
+        const sel = document.getElementById("cita-cliente");
+        sel.innerHTML = "";
+        if (clientes.length === 0) {
+          const opt = document.createElement("option");
+          opt.value = "";
+          opt.textContent = "No hay clientes registrados";
+          opt.disabled = true;
+          sel.appendChild(opt);
+        } else {
+          clientes.forEach((cli) => {
+            const opt = document.createElement("option");
+            opt.value = cli.id;
+            opt.textContent = cli.nombre;
+            sel.appendChild(opt);
+          });
+        }
+      }
+
+      function renderSelectServicios() {
+        const sel = document.getElementById("cita-servicio");
+        sel.innerHTML =
+          '<option value="">-- Selecciona un servicio --</option>';
+        servicios.forEach((serv) => {
+          const opt = document.createElement("option");
+          opt.value = serv.id;
+          opt.textContent =
+            serv.nombre + " (RD$" + serv.precio.toFixed(2) + ")";
+          sel.appendChild(opt);
+        });
+      }
+
+      // Escuchar cambios de citas en tiempo real desde Firestore
+      function fetchCitas() {
+        if (unsubscribeCitas) {
+          unsubscribeCitas();
+        }
+
+        unsubscribeCitas = db
+          .collection("agendaCitas")
+          .orderBy("fecha", "asc")
+          .onSnapshot(
+            (snapshot) => {
+              citas = [];
+              snapshot.forEach((doc) => {
+                const data = doc.data();
+                // Normalizar fecha si viene como Timestamp
+                if (data.fecha && typeof data.fecha.toDate === "function") {
+                  const dt = data.fecha.toDate();
+                  data.fecha = dt.toISOString().slice(0, 10); // YYYY-MM-DD
+                }
+                citas.push({ id: doc.id, ...data });
+              });
+              console.log("Citas cargadas desde Firestore:", citas);
+              // Ordenar localmente por hora después de fecha
+              citas.sort((a, b) => {
+                if (a.fecha === b.fecha) {
+                  return a.hora.localeCompare(b.hora);
+                }
+                return a.fecha.localeCompare(b.fecha);
+              });
+              renderCitas();
+            },
+            (error) => {
+              console.error("Error al cargar citas:", error);
+            },
+          );
+      }
+
+      // Renderizar lista de citas con filtros
+      function renderCitas() {
+        const container = document.getElementById("citas-lista");
+        const filtro = document.getElementById("filtro-citas")
+          ? document.getElementById("filtro-citas").value
+          : "todas";
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+
+        let citasFiltradas = citas.filter((cita) => {
+          // Normalizar fecha: aceptar string 'YYYY-MM-DD' o Timestamp de Firestore
+          let fechaCita = null;
+
+          if (typeof cita.fecha === "string") {
+            // Es string YYYY-MM-DD: parsear como UTC (no como local)
+            const partes = cita.fecha.split("-");
+            fechaCita = new Date(
+              Date.UTC(
+                parseInt(partes[0]),
+                parseInt(partes[1]) - 1,
+                parseInt(partes[2]),
+              ),
+            );
+          } else if (cita.fecha && typeof cita.fecha.toDate === "function") {
+            // Es Timestamp de Firestore
+            fechaCita = cita.fecha.toDate();
+            fechaCita.setUTCHours(0, 0, 0, 0);
+          } else {
+            return false; // Si no tiene fecha válida, excluir
+          }
+
+          // Filtrar por estado pendiente si está seleccionado
+          if (filtro === "pendientes") {
+            return cita.estado === "pendiente";
+          } else if (filtro === "hoy") {
+            // Comparar en UTC para evitar problemas de timezone
+            const hoyUTC = new Date();
+            hoyUTC.setUTCHours(0, 0, 0, 0);
+            const hoyMatch = fechaCita.getTime() === hoyUTC.getTime();
+            console.log(
+              `[Filtro HOY] Cita fecha: ${
+                cita.fecha
+              }, comparación: ${hoyMatch}, fechaCita: ${fechaCita.toISOString()}, hoy: ${hoyUTC.toISOString()}`,
+            );
+            return hoyMatch;
+          } else if (filtro === "semana") {
+            const finSemana = new Date(hoy);
+            finSemana.setDate(finSemana.getDate() + 7);
+            return fechaCita >= hoy && fechaCita <= finSemana;
+          } else if (filtro === "mes") {
+            return (
+              fechaCita.getMonth() === hoy.getMonth() &&
+              fechaCita.getFullYear() === hoy.getFullYear()
+            );
+          } else if (filtro === "proximas") {
+            const fin = new Date(hoy);
+            fin.setDate(fin.getDate() + 7);
+            return fechaCita >= hoy && fechaCita <= fin;
+          }
+          return true; // todas
+        });
+
+        container.innerHTML = "";
+        if (citasFiltradas.length === 0) {
+          container.innerHTML =
+            '<p style="color: #999; text-align: center;">No hay citas disponibles.</p>';
+          return;
+        }
+
+        citasFiltradas.forEach((cita) => {
+          const clienteName =
+            clientes.find((c) => c.id === cita.clienteId)?.nombre ||
+            "Cliente Desconocido";
+          const serviceName =
+            servicios.find((s) => s.id === cita.servicioId)?.nombre ||
+            "Servicio Desconocido";
+
+          const div = document.createElement("div");
+          div.className = "cita-card";
+          div.innerHTML = `
+              <div class="cita-header">
+                <span class="cita-cliente">${clienteName}</span>
+                <span class="cita-estado ${cita.estado}">${cita.estado}</span>
+              </div>
+              <div class="cita-detalles">
+                <strong>Servicio:</strong> ${serviceName}<br/>
+                <strong>Fecha:</strong> ${(() => {
+                  let d;
+                  if (cita.fecha && typeof cita.fecha.toDate === "function")
+                    d = cita.fecha.toDate();
+                  else d = new Date(cita.fecha);
+                  return d.toLocaleDateString("es-DO");
+                })()}<br/>
+                <strong>Hora:</strong> ${cita.hora}<br/>
+                ${
+                  cita.observaciones
+                    ? "<strong>Notas:</strong> " + cita.observaciones + "<br/>"
+                    : ""
+                }
+              </div>
+              <div class="cita-actions">
+                ${
+                  cita.estado === "pendiente"
+                    ? `
+                  <button class="btn-completar" onclick="cambiarEstadoCita('${
+                    cita.id
+                  }', 'completada')">Marcar Completada</button>
+                  ${
+                    usuarioActual && usuarioActual.rol === "propietario"
+                      ? `<button class="btn-cancelar" onclick="cambiarEstadoCita('${cita.id}', 'cancelada')">Cancelar</button>`
+                      : ``
+                  }
+                `
+                    : ``
+                }
+                <button class="btn-ver" onclick="editarCita('${
+                  cita.id
+                }')">Ver Cita</button>
+                ${
+                  cita.estado === "pendiente" ||
+                  (usuarioActual && usuarioActual.rol === "propietario")
+                    ? `<button onclick="editarCita('${cita.id}')">Editar</button>`
+                    : ``
+                }
+                ${
+                  usuarioActual && usuarioActual.rol === "propietario"
+                    ? `<button onclick="eliminarCita('${cita.id}')">Eliminar</button>`
+                    : ``
+                }
+              </div>
+            `;
+          container.appendChild(div);
+        });
+      }
+
+      // Función para limpiar el formulario de citas
+      function limpiarFormularioCitas() {
+        const form = document.getElementById("form-agendar-cita");
+        if (!form) return;
+
+        form.reset();
+        const cita_cliente = document.getElementById("cita-cliente");
+        const cita_servicio = document.getElementById("cita-servicio");
+        const cita_fecha = document.getElementById("cita-fecha");
+        const cita_hora = document.getElementById("cita-hora");
+        const cita_observaciones =
+          document.getElementById("cita-observaciones");
+        const cita_whatsapp = document.getElementById("cita-whatsapp");
+
+        if (cita_cliente) cita_cliente.value = "";
+        if (cita_servicio) cita_servicio.value = "";
+        if (cita_fecha) cita_fecha.value = "";
+        if (cita_hora) cita_hora.value = "";
+        if (cita_observaciones) cita_observaciones.value = "";
+        if (cita_whatsapp) cita_whatsapp.value = "";
+
+        window.citaEnEdicion = null;
+
+        // Habilitar campos nuevamente
+        if (cita_cliente) cita_cliente.disabled = false;
+        if (cita_servicio) cita_servicio.disabled = false;
+        if (cita_fecha) cita_fecha.disabled = false;
+        if (cita_hora) cita_hora.disabled = false;
+        if (cita_observaciones) cita_observaciones.disabled = false;
+        if (cita_whatsapp) cita_whatsapp.disabled = false;
+
+        // Restablecer texto del botón
+        const submitBtn = document.querySelector('button[type="submit"]');
+        if (submitBtn) submitBtn.textContent = "Agendar Cita";
+
+        // Resetear filtro a "todas" para ver la nueva cita
+        const filtro = document.getElementById("filtro-citas");
+        if (filtro) {
+          filtro.value = "todas";
+        }
+      }
+
+      // Manejar el envío del formulario de agendar
+      const formAgendarCita = document.getElementById("form-agendar-cita");
+      if (formAgendarCita) {
+        formAgendarCita.onsubmit = async function (e) {
+          e.preventDefault();
+
+          // Si el formulario está deshabilitado, solo cerrar
+          if (document.getElementById("cita-cliente").disabled) {
+            limpiarFormularioCitas();
+            window.citaEnEdicion = null;
+            showAviso("Cita cerrada.", "info");
+            return;
+          }
+
+          const clienteId = document.getElementById("cita-cliente").value;
+          const servicioId = document.getElementById("cita-servicio").value;
+          const fecha = document.getElementById("cita-fecha").value;
+          const hora = document.getElementById("cita-hora").value;
+          const observaciones =
+            document.getElementById("cita-observaciones").value;
+          const whatsapp = document.getElementById("cita-whatsapp").value;
+          const errDiv = document.getElementById("cita-err");
+
+          errDiv.textContent = "";
+
+          if (!clienteId || !servicioId || !fecha || !hora || !whatsapp) {
+            errDiv.textContent =
+              "Por favor, completa todos los campos requeridos.";
+            return;
+          }
+
+          const cliente = clientes.find((c) => c.id === clienteId);
+          const servicio = servicios.find((s) => s.id === parseInt(servicioId));
+
+          if (!cliente || !servicio) {
+            errDiv.textContent = "Cliente o servicio no válido.";
+            return;
+          }
+
+          const nuevaCita = {
+            clienteId: clienteId,
+            clienteNombre: cliente.nombre,
+            servicioId: parseInt(servicioId),
+            servicioNombre: servicio.nombre,
+            fecha: fecha,
+            hora: hora,
+            observaciones: observaciones,
+            whatsapp: whatsapp,
+            estado: "pendiente",
+            fechaCreacion: new Date(),
+            recordatorioEnviado: false,
+          };
+
+          try {
+            // Verificar si estamos editando o creando una nueva cita
+            if (window.citaEnEdicion) {
+              // MODO EDICIÓN: actualizar cita existente
+              console.log("Editando cita con ID:", window.citaEnEdicion);
+              await db
+                .collection("agendaCitas")
+                .doc(window.citaEnEdicion)
+                .update(nuevaCita);
+              console.log(
+                "Cita actualizada exitosamente con ID:",
+                window.citaEnEdicion,
+              );
+              errDiv.textContent = "Cita actualizada exitosamente.";
+              errDiv.style.color = "#090";
+
+              // NO enviar notificación WhatsApp en ediciones (ya fue enviada en creación)
+              showAviso("Cita actualizada", "success");
+            } else {
+              // MODO CREACIÓN: crear nueva cita
+              console.log("Creando nueva cita:", nuevaCita);
+              const docRef = await db.collection("agendaCitas").add(nuevaCita);
+              console.log("Cita registrada con ID:", docRef.id);
+              errDiv.textContent = "Cita agendada exitosamente.";
+              errDiv.style.color = "#090";
+
+              // Enviar notificación WhatsApp solo en creación
+              console.log("Enviando WhatsApp para nueva cita...");
+              try {
+                await enviarNotificacionWhatsApp(
+                  whatsapp,
+                  cliente.nombre,
+                  servicio.nombre,
+                  fecha,
+                  hora,
+                );
+                console.log("WhatsApp enviado correctamente");
+              } catch (whatsappError) {
+                console.error("Error al enviar WhatsApp:", whatsappError);
+                // No bloqueamos si falla WhatsApp
+              }
+            }
+
+            // Limpiar formulario y modo edición
+            limpiarFormularioCitas();
+
+            // Resetear filtro a "todas" para ver la nueva cita
+            if (document.getElementById("filtro-citas")) {
+              document.getElementById("filtro-citas").value = "todas";
+            }
+
+            // Scroll a las citas
+            const citasSection = document.getElementById("citas-lista");
+            if (citasSection) {
+              citasSection.scrollIntoView({
+                behavior: "smooth",
+                block: "start",
+              });
+            }
+
+            setTimeout(() => {
+              errDiv.textContent = "";
+              errDiv.style.color = "#b00";
+            }, 3000);
+          } catch (error) {
+            console.error("Error al guardar cita:", error);
+            errDiv.textContent = "Error al guardar cita: " + error.message;
+          }
+        };
+      }
+
+      // Cambiar estado de cita (completada, cancelada)
+      async function cambiarEstadoCita(citaId, nuevoEstado) {
+        // Protección: solo admin puede cancelar citas
+        if (
+          nuevoEstado === "cancelada" &&
+          !(usuarioActual && usuarioActual.rol === "propietario")
+        ) {
+          showAviso("Solo el administrador puede cancelar citas.", "warn");
+          return;
+        }
+
+        try {
+          await db.collection("agendaCitas").doc(citaId).update({
+            estado: nuevoEstado,
+          });
+          console.log("Cita " + citaId + " actualizada a " + nuevoEstado);
+        } catch (error) {
+          console.error("Error al actualizar cita:", error);
+          showAviso("Error al actualizar cita: " + error.message, "error");
+        }
+      }
+
+      // Editar cita (solo citas pendientes, salvo que sea propietario)
+      async function editarCita(citaId) {
+        const cita = citas.find((c) => c.id === citaId);
+        if (!cita) return;
+
+        // Llenar el formulario con los datos de la cita (SIEMPRE, para poder verla)
+        document.getElementById("cita-cliente").value = cita.clienteId;
+        document.getElementById("cita-servicio").value = cita.servicioId;
+        document.getElementById("cita-fecha").value = cita.fecha;
+        document.getElementById("cita-hora").value = cita.hora;
+        document.getElementById("cita-observaciones").value =
+          cita.observaciones;
+        document.getElementById("cita-whatsapp").value = cita.whatsapp;
+
+        // Verificar permisos para EDITAR (no solo ver)
+        const puedeEditar =
+          cita.estado === "pendiente" ||
+          (usuarioActual && usuarioActual.rol === "propietario");
+
+        if (!puedeEditar) {
+          showAviso(
+            "Solo puedes ver esta cita. Solo el administrador puede editarla.",
+            "info",
+          );
+          // Deshabilitar campos si no puede editar
+          document.getElementById("cita-cliente").disabled = true;
+          document.getElementById("cita-servicio").disabled = true;
+          document.getElementById("cita-fecha").disabled = true;
+          document.getElementById("cita-hora").disabled = true;
+          document.getElementById("cita-observaciones").disabled = true;
+          document.getElementById("cita-whatsapp").disabled = true;
+
+          // Cambiar texto del botón a "Ver"
+          const submitBtn = document.querySelector('button[type="submit"]');
+          if (submitBtn) submitBtn.textContent = "Cerrar";
+        } else {
+          // Habilitar campos si puede editar
+          document.getElementById("cita-cliente").disabled = false;
+          document.getElementById("cita-servicio").disabled = false;
+          document.getElementById("cita-fecha").disabled = false;
+          document.getElementById("cita-hora").disabled = false;
+          document.getElementById("cita-observaciones").disabled = false;
+          document.getElementById("cita-whatsapp").disabled = false;
+
+          // Cambiar texto del botón a "Guardar"
+          const submitBtn = document.querySelector('button[type="submit"]');
+          if (submitBtn) submitBtn.textContent = "Guardar Cambios";
+
+          showAviso(
+            "Puedes editar la cita. Recuerda guardar los cambios.",
+            "info",
+          );
+        }
+
+        // Marcar como siendo editada
+        window.citaEnEdicion = citaId;
+
+        // Scroll al formulario
+        document
+          .getElementById("form-agendar-cita")
+          .scrollIntoView({ behavior: "smooth" });
+      }
+
+      // Eliminar cita
+      async function eliminarCita(citaId) {
+        if (!confirm("¿Estás seguro de que deseas eliminar esta cita?")) {
+          return;
+        }
+
+        try {
+          await db.collection("agendaCitas").doc(citaId).delete();
+          console.log("Cita eliminada:", citaId);
+        } catch (error) {
+          console.error("Error al eliminar cita:", error);
+          alert("Error al eliminar cita: " + error.message);
+        }
+      }
+
+      // Función para enviar notificación por WhatsApp
+      async function enviarNotificacionWhatsApp(
+        whatsapp,
+        nombreCliente,
+        servicio,
+        fecha,
+        hora,
+      ) {
+        const mensaje =
+          `Hola ${nombreCliente}, tu cita para ` +
+          `${servicio} está confirmada para el ${fecha} a las ` +
+          `${hora}. ¡Te esperamos!`;
+
+        console.log("📱 Notificación WhatsApp a: " + whatsapp, mensaje);
+
+        // Intentar usar Cloud Function si está disponible
+        try {
+          const enviarNotificacion = firebase
+            .functions()
+            .httpsCallable("enviarNotificacionWhatsApp");
+          const result = await enviarNotificacion({
+            whatsapp: whatsapp,
+            nombreCliente: nombreCliente,
+            servicio: servicio,
+            fecha: fecha,
+            hora: hora,
+          });
+
+          console.log("WhatsApp enviado:", result.data);
+
+          const notif = document.createElement("div");
+          let msg = "✓ Notificación enviada a: " + whatsapp;
+          let bgColor = "#25d366";
+
+          if (result.data && result.data.simulated) {
+            msg = "ℹ Notificación (modo simulado)";
+            bgColor = "#2196F3";
+          }
+
+          notif.style.cssText = `position: fixed; bottom: 20px; right: 20px; background: ${bgColor}; color: white; padding: 15px 20px; border-radius: 8px; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);`;
+          notif.innerHTML = `<strong>${msg}</strong>`;
+          document.body.appendChild(notif);
+
+          setTimeout(() => notif.remove(), 5000);
+        } catch (error) {
+          console.error("Error en Cloud Functions:", error);
+
+          // Cloud Functions no disponible, usar notificación simulada + abrir wa.me
+          console.warn("Cloud Functions no disponible, modo simulado", error);
+
+          const mensajeWa = `Hola ${nombreCliente}, tu cita para ${servicio} está confirmada para el ${fecha} a las ${hora}. ¡Te esperamos!`;
+          const phoneDigits = (whatsapp || "").replace(/\D/g, "");
+
+          if (!phoneDigits) {
+            console.warn("Número de WhatsApp inválido");
+            return;
+          }
+
+          const waUrl = `https://wa.me/${phoneDigits}?text=${encodeURIComponent(
+            mensajeWa,
+          )}`;
+
+          // Intentar abrir chat (puede bloquearse si no es interacción del usuario)
+          try {
+            window.open(waUrl, "_blank");
+          } catch (e) {
+            console.warn("No se pudo abrir ventana de WhatsApp:", e);
+          }
+
+          const notif = document.createElement("div");
+          notif.style.cssText =
+            "position: fixed; bottom: 20px; right: 20px; background: #FF9800; color: white; padding: 15px 20px; border-radius: 8px; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);";
+          notif.innerHTML = `<strong>ℹ Modo simulado - Cita registrada</strong><br/>Whatsapp: ${whatsapp}<br/><a href='${waUrl}' target='_blank' style='color: white; text-decoration: underline;'>Abrir chat WhatsApp</a>`;
+          document.body.appendChild(notif);
+
+          setTimeout(() => {
+            notif.remove();
+          }, 7000);
+        }
+      }
+
+      // Mostrar aviso flotante (info/warn/success/error)
+      function showAviso(mensaje, nivel = "info") {
+        const colors = {
+          info: "#2196F3",
+          warn: "#FF9800",
+          success: "#4CAF50",
+          error: "#f44336",
+        };
+        const notif = document.createElement("div");
+        notif.style.cssText = `position: fixed; bottom: 20px; right: 20px; background: ${
+          colors[nivel] || colors.info
+        }; color: white; padding: 12px 16px; border-radius: 8px; z-index: 9999; box-shadow: 0 4px 12px rgba(0,0,0,0.15);`;
+        notif.innerHTML = `<strong>${mensaje}</strong>`;
+        document.body.appendChild(notif);
+        setTimeout(() => notif.remove(), 4500);
+      }
+
+      // Función para verificar citas próximas y enviar recordatorios (ejecutar periódicamente)
+      async function verificarYEnviarRecordatorios() {
+        const hoy = new Date();
+        hoy.setHours(0, 0, 0, 0);
+        const mañana = new Date(hoy);
+        mañana.setDate(mañana.getDate() + 1);
+        const pasadoMañana = new Date(hoy);
+        pasadoMañana.setDate(pasadoMañana.getDate() + 2);
+
+        // Filtrar citas para los próximos 1-2 días
+        const citasProximas = citas.filter((cita) => {
+          let fechaCita;
+          if (cita.fecha && typeof cita.fecha.toDate === "function") {
+            fechaCita = cita.fecha.toDate();
+          } else {
+            fechaCita = new Date(cita.fecha);
+          }
+          fechaCita.setHours(0, 0, 0, 0);
+          return (
+            (fechaCita.getTime() === mañana.getTime() ||
+              fechaCita.getTime() === pasadoMañana.getTime()) &&
+            cita.estado === "pendiente" &&
+            !cita.recordatorioEnviado
+          );
+        });
+
+        // Enviar notificaciones
+        for (const cita of citasProximas) {
+          const cliente = clientes.find((c) => c.id === cita.clienteId);
+          const servicio = servicios.find((s) => s.id === cita.servicioId);
+
+          if (cliente && servicio) {
+            enviarNotificacionWhatsApp(
+              cita.whatsapp,
+              cliente.nombre,
+              servicio.nombre,
+              cita.fecha,
+              cita.hora,
+            );
+
+            // Marcar como recordatorio enviado
+            try {
+              await db.collection("agendaCitas").doc(cita.id).update({
+                recordatorioEnviado: true,
+              });
+            } catch (error) {
+              console.error(
+                "Error al marcar recordatorio como enviado:",
+                error,
+              );
+            }
+          }
+        }
+      }
+
+      // Ejecutar verificación de recordatorios cada hora
+      setInterval(verificarYEnviarRecordatorios, 3600000);
+    </script>
+    <div id="modal-edicion-backdrop" class="modal-backdrop hidden">
+      <div
+        id="modal-edicion-panel"
+        class="modal-panel"
+        style="max-width: 800px"
+      >
+        <h2>Corregir Factura #<span id="edit-factura-display-id">...</span></h2>
+        <p>
+          Ajustando productos/servicios. El inventario se recalculará al
+          guardar.
+        </p>
+
+        <div class="form-group-flex">
+          <div class="form-group">
+            <label for="editClienteNombre">Cliente:</label>
+            <input
+              type="text"
+              id="editClienteNombre"
+              placeholder="Nombre del cliente"
+            />
+          </div>
+          <div class="form-group">
+            <label for="editProductoBusqueda">Buscar/Añadir Producto:</label>
+            <input
+              type="text"
+              id="editProductoBusqueda"
+              placeholder="Buscar producto o servicio"
+            />
+          </div>
+        </div>
+
+        <hr />
+
+        <h3>Detalle de Productos</h3>
+        <table class="productos-table">
+          <thead>
+            <tr>
+              <th style="width: 50%">Producto/Servicio</th>
+              <th>Cantidad</th>
+              <th>Precio Unit.</th>
+              <th>Subtotal</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody id="editProductosFacturaBody">
+            <tr>
+              <td colspan="5" style="text-align: center">
+                Cargando productos...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+
+        <hr />
+
+        <div class="factura-totales-edit">
+          <p>Subtotal: RD$<span id="editSubtotalDisplay">0.00</span></p>
+          <p>
+            Impuestos (ITBIS): RD$<span id="editImpuestoDisplay">0.00</span>
+          </p>
+          <p class="gran-total">
+            Total a Corregir: RD$<span id="editTotalDisplay">0.00</span>
+          </p>
+          <input type="hidden" id="editFacturaId" />
+        </div>
+
+        <div class="modal-actions">
+          <button
+            type="button"
+            class="btn-cancelar"
+            onclick="cerrarModalEdicion()"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            class="btn-guardar"
+            onclick="guardarFacturaCorregida()"
+          >
+            Guardar Cambios y Corregir Inventario
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- NUEVO: Modal para editar cliente -->
+    <div id="modal-editar-cliente-backdrop" class="modal-backdrop hidden">
+      <div class="modal-panel" style="max-width: 500px">
+        <h2>Editar Cliente</h2>
+        <form id="form-editar-cliente" style="margin-top: 20px">
+          <input type="hidden" id="edit-cliente-id" />
+
+          <div class="form-group">
+            <label for="edit-cliente-nombre">Nombre:</label>
+            <input type="text" id="edit-cliente-nombre" required />
+          </div>
+
+          <div class="form-group">
+            <label for="edit-cliente-tel">Teléfono:</label>
+            <input type="text" id="edit-cliente-tel" />
+          </div>
+
+          <div class="form-group">
+            <label for="edit-cliente-dir">Dirección:</label>
+            <input type="text" id="edit-cliente-dir" />
+          </div>
+
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="btn-cancelar"
+              onclick="cerrarModalEditarCliente()"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn-guardar">Guardar Cambios</button>
+          </div>
+        </form>
+        <div
+          id="edit-cliente-error"
+          class="error"
+          style="margin-top: 10px"
+        ></div>
+      </div>
+    </div>
+
+    <!-- NUEVO: Modal para editar producto -->
+    <div id="modal-editar-producto-backdrop" class="modal-backdrop hidden">
+      <div class="modal-panel" style="max-width: 500px">
+        <h2>Editar Producto</h2>
+        <form id="form-editar-producto" style="margin-top: 20px">
+          <input type="hidden" id="edit-producto-id" />
+
+          <div class="form-group">
+            <label for="edit-producto-nombre">Nombre:</label>
+            <input type="text" id="edit-producto-nombre" required />
+          </div>
+
+          <div class="form-group">
+            <label for="edit-producto-precio">Precio:</label>
+            <input type="number" id="edit-producto-precio" min="1" required />
+          </div>
+
+          <div class="form-group">
+            <label for="edit-producto-stock">Stock:</label>
+            <input type="number" id="edit-producto-stock" min="0" required />
+          </div>
+
+          <div class="form-group">
+            <label for="edit-producto-descripcion">Descripción:</label>
+            <input
+              type="text"
+              id="edit-producto-descripcion"
+              placeholder="Información adicional del producto"
+            />
+          </div>
+
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="btn-cancelar"
+              onclick="cerrarModalEditarProducto()"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn-guardar">Guardar Cambios</button>
+          </div>
+        </form>
+        <div
+          id="edit-producto-error"
+          class="error"
+          style="margin-top: 10px"
+        ></div>
+      </div>
+    </div>
+
+    <!-- NUEVO: Modal para editar servicio -->
+    <div id="modal-editar-servicio-backdrop" class="modal-backdrop hidden">
+      <div class="modal-panel" style="max-width: 500px">
+        <h2>Editar Servicio</h2>
+        <form id="form-editar-servicio" style="margin-top: 20px">
+          <input type="hidden" id="edit-servicio-id" />
+
+          <div class="form-group">
+            <label for="edit-servicio-nombre">Nombre:</label>
+            <input type="text" id="edit-servicio-nombre" required />
+          </div>
+
+          <div class="form-group">
+            <label for="edit-servicio-precio">Precio:</label>
+            <input type="number" id="edit-servicio-precio" min="1" required />
+          </div>
+
+          <div class="form-group">
+            <label for="edit-servicio-descripcion">Descripción:</label>
+            <input type="text" id="edit-servicio-descripcion" />
+          </div>
+
+          <div class="modal-actions">
+            <button
+              type="button"
+              class="btn-cancelar"
+              onclick="cerrarModalEditarServicio()"
+            >
+              Cancelar
+            </button>
+            <button type="submit" class="btn-guardar">Guardar Cambios</button>
+          </div>
+        </form>
+        <div
+          id="edit-servicio-error"
+          class="error"
+          style="margin-top: 10px"
+        ></div>
+      </div>
+    </div>
+
+    <script>
+      // Variable global para guardar los productos que se están editando
+      window.productosEnEdicion = [];
+      window.ventaOriginal = {};
+
+      // 1. Función de CÁLCULO (Se llama al cambiar la cantidad)
+      function recalcularTotalesEdicion() {
+        const tbody = document.getElementById("editProductosFacturaBody");
+        let subtotal = 0;
+
+        // Iterar sobre cada fila de la tabla
+        tbody.querySelectorAll("tr").forEach((row, index) => {
+          const cantidadInput = row.querySelector('input[type="number"]');
+          const cantidad = parseFloat(cantidadInput.value);
+
+          // Obtener el precio unitario del producto original (guardado en window.productosEnEdicion)
+          const productoOriginal = window.productosEnEdicion.find(
+            (p) => p.index === index,
+          );
+
+          // Si el producto existe y la cantidad es válida
+          if (productoOriginal && !isNaN(cantidad) && cantidad > 0) {
+            const precio = productoOriginal.precio;
+            const nuevoSubtotalProducto = cantidad * precio;
+            subtotal += nuevoSubtotalProducto;
+
+            // Actualizar el valor en el display de la fila (columna de subtotal)
+            row.children[3].textContent = nuevoSubtotalProducto.toFixed(2);
+
+            // Actualizar la cantidad en el array de productos en edición
+            window.productosEnEdicion[index].cantidad = cantidad;
+          } else if (productoOriginal) {
+            // Si la cantidad es 0 o inválida, se marca como 0.00
+            row.children[3].textContent = (0).toFixed(2);
+            window.productosEnEdicion[index].cantidad = 0;
+          }
+        });
+
+        actualizarDisplayTotalesEdicion(subtotal);
+      }
+
+      // 2. Función de ACTUALIZACIÓN de los totales en la parte inferior del modal
+      function actualizarDisplayTotalesEdicion(subtotal) {
+        // Asumiremos un 18% de ITBIS para este ejemplo, ajústalo a tu tasa
+        const ITBIS_RATE = 0.18;
+        const impuesto = subtotal * ITBIS_RATE;
+        const totalFinal = subtotal + impuesto;
+
+        document.getElementById("editSubtotalDisplay").textContent =
+          subtotal.toFixed(2);
+        document.getElementById("editImpuestoDisplay").textContent =
+          impuesto.toFixed(2);
+        document.getElementById("editTotalDisplay").textContent =
+          totalFinal.toFixed(2);
+      }
+
+      // 3. Función de ELIMINACIÓN de una fila/producto
+      function eliminarProductoEdicion(index) {
+        // 1. Eliminar el producto del array en edición
+        window.productosEnEdicion.splice(index, 1);
+
+        // 2. Volver a dibujar la tabla (la forma más fácil)
+        const tbodyProductos = document.getElementById(
+          "editProductosFacturaBody",
+        );
+        let subtotalRecalculado = 0;
+
+        let productosHTML = "";
+        window.productosEnEdicion.forEach((p, newIndex) => {
+          const subtotal = p.precio * p.cantidad;
+          subtotalRecalculado += subtotal;
+
+          productosHTML += `
+            <tr data-producto-index="${newIndex}">
+                <td>${p.nombre}</td>
+                <td><input type="number" value="${
+                  p.cantidad
+                }" min="1" step="1" onchange="recalcularTotalesEdicion()"></td>
+                <td>${p.precio.toFixed(2)}</td>
+                <td>${subtotal.toFixed(2)}</td>
+                <td>
+                    <button type="button" onclick="eliminarProductoEdicion(${newIndex})">Eliminar</button>
+                </td>
+            </tr>
+        `;
+        });
+
+        tbodyProductos.innerHTML = productosHTML;
+        actualizarDisplayTotalesEdicion(subtotalRecalculado);
+      }
+
+      // 4. Función de GUARDADO (El CRÍTICO Paso 12 - ¡LO HAREMOS AHORA!)
+      async function guardarFacturaCorregida() {
+        const facturaId = document.getElementById("editFacturaId").value;
+        const nuevoClienteNombre = document
+          .getElementById("editClienteNombre")
+          .value.trim();
+
+        // 1. Filtrar productos con cantidad > 0 para guardar
+        const productosACorregir = window.productosEnEdicion.filter(
+          (p) => p.cantidad > 0,
+        );
+
+        if (productosACorregir.length === 0) {
+          alert("La factura corregida no puede estar vacía.");
+          return;
+        }
+
+        // 2. Recalcular el total final
+        let subtotalFinal = 0;
+        productosACorregir.forEach((p) => {
+          subtotalFinal += p.precio * p.cantidad;
+        });
+
+        const ITBIS_RATE = 0.18;
+        const impuestoFinal = subtotalFinal * ITBIS_RATE;
+        const totalFinal = subtotalFinal + impuestoFinal;
+
+        if (
+          !confirm(
+            `¿Confirma guardar los cambios de la factura #${facturaId.substring(
+              0,
+              8,
+            )} por un total de RD$${totalFinal.toFixed(
+              2,
+            )}? El inventario se ajustará.`,
+          )
+        ) {
+          return;
+        }
+
+        // 3. Preparar la actualización en Firebase
+        const dataActualizada = {
+          clienteNombre: nuevoClienteNombre,
+          productos: productosACororriger, // Los productos con cantidades corregidas
+          subtotal: subtotalFinal,
+          impuesto: impuestoFinal,
+          total: totalFinal,
+          // Opcional: añadir un registro de auditoría
+          ultimaCorreccion: firebase.firestore.FieldValue.serverTimestamp(),
+          corregidoPor: usuarioActual.nombre || "Administrador",
+        };
+
+        try {
+          // Ejecutamos el guardado
+          await db
+            .collection("ventasDelDia")
+            .doc(facturaId)
+            .update(dataActualizada);
+
+          // 4. Ajustar Inventario (Esto es el paso más difícil, asumimos que tu base de datos de inventario es 'inventario')
+
+          // 4a. DEVOLVER productos de la venta ORIGINAL al inventario
+          for (const p of window.ventaOriginal.items) {
+            if (p.id) {
+              // Solo si el producto tiene ID (es un artículo de inventario)
+              const inventarioRef = db.collection("inventario").doc(p.id);
+              // Incrementamos la cantidad. Esto es la devolución de la venta original.
+              await inventarioRef.update({
+                cantidad: firebase.firestore.FieldValue.increment(p.cantidad),
+              });
+            }
+          }
+
+          // 4b. RESTAR productos de la venta CORREGIDA del inventario
+          for (const p of productosACorregir) {
+            if (p.id) {
+              const inventarioRef = db.collection("inventario").doc(p.id);
+              // Decrementamos la cantidad. Esto es la venta corregida.
+              await inventarioRef.update({
+                cantidad: firebase.firestore.FieldValue.increment(-p.cantidad),
+              });
+            }
+          }
+
+          alert(
+            "Factura corregida exitosamente. El inventario ha sido actualizado.",
+          );
+          cerrarModalEdicion(); // Cierra el modal
+          // La vista del reporte se actualizará automáticamente gracias a onSnapshot (Paso 2)
+        } catch (error) {
+          console.error("Error al guardar y corregir inventario:", error);
+          alert(
+            "ERROR: No se pudo guardar la corrección o actualizar el inventario. Verifique la Consola.",
+          );
+        }
+      }
+      function cerrarModalEdicion() {
+        const modal = document.getElementById("modal-edicion-backdrop");
+        if (modal) {
+          modal.classList.add("hidden");
+        }
+      }
+    </script>
+
+    <!-- ============================
+     CAMBIAR CONTRASEÑA (ADMIN)
+     ============================ -->
+    <div
+      id="cambiarPassContainer"
+      style="
+        padding: 20px;
+        max-width: 350px;
+        background: #f5f5f5;
+        border-radius: 8px;
+        margin: 20px auto;
+        display: none;
+      "
+    >
+      <h3>Cambiar mi contraseña</h3>
+
+      <input
+        type="password"
+        id="newPass"
+        placeholder="Nueva contraseña"
+        style="width: 100%; padding: 10px; margin-bottom: 10px"
+      />
+      <button onclick="cambiarMiPassword()" style="padding: 10px 15px">
+        Cambiar
+      </button>
+
+      <button
+        onclick="mostrarCambioPasswordCajero()"
+        style="margin-left: 8px; padding: 6px 10px"
+      >
+        Cambiar contraseña de Cajero
+      </button>
+
+      <p id="passMsg" style="color: red"></p>
+    </div>
+
+    <script type="module">
+      import {
+        updatePassword,
+        EmailAuthProvider,
+        reauthenticateWithCredential,
+      } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
+
+      window.mostrarCambioPassword = function () {
+        document.getElementById("cambiarPassContainer").style.display = "block";
+      };
+
+      window.cambiarMiPassword = async function () {
+        const nueva = document.getElementById("newPass").value.trim();
+        const msg = document.getElementById("passMsg");
+
+        if (!nueva || nueva.length < 6) {
+          msg.textContent = "La contraseña debe tener al menos 6 caracteres.";
+          return;
+        }
+
+        try {
+          const user = auth.currentUser;
+          await updatePassword(user, nueva);
+          msg.style.color = "green";
+          msg.textContent = "Contraseña cambiada con éxito.";
+        } catch (err) {
+          msg.style.color = "red";
+          msg.textContent = "Error: " + err.message;
+        }
+      };
+    </script>
+
+    <!-- ============================
+     CAMBIAR CONTRASEÑA DEL CAJERO
+     ============================ -->
+    <div
+      id="cambiarPassCajeroContainer"
+      style="
+        padding: 20px;
+        max-width: 350px;
+        background: #fff7e6;
+        border-radius: 8px;
+        margin: 20px auto;
+        display: none;
+      "
+    >
+      <h3>Cambiar contraseña del empleado/cajero</h3>
+
+      <input
+        id="emailCajero"
+        type="email"
+        placeholder="Correo del cajero"
+        style="width: 100%; padding: 10px; margin-bottom: 8px"
+      />
+      <input
+        id="currentPassCajero"
+        type="password"
+        placeholder="Contraseña actual del cajero"
+        style="width: 100%; padding: 10px; margin-bottom: 8px"
+      />
+      <input
+        id="newPassCajero"
+        type="password"
+        placeholder="Nueva contraseña"
+        style="width: 100%; padding: 10px; margin-bottom: 8px"
+      />
+
+      <button
+        id="btnCambiarPassCajero"
+        onclick="cambiarPasswordCajero()"
+        style="padding: 10px 15px"
+      >
+        Cambiar contraseña
+      </button>
+
+      <p id="msgCajero" style="color: red"></p>
+    </div>
+
+    <script type="module">
+      import {
+        signInWithEmailAndPassword,
+        updatePassword,
+        signOut,
+      } from "https://www.gstatic.com/firebasejs/10.6.0/firebase-auth.js";
+
+      window.mostrarCambioPasswordCajero = function () {
+        document.getElementById("cambiarPassCajeroContainer").style.display =
+          "block";
+      };
+
+      window.cambiarPasswordCajero = async function () {
+        const email = document.getElementById("emailCajero").value.trim();
+        const currentPass = document
+          .getElementById("currentPassCajero")
+          .value.trim();
+        const newPass = document.getElementById("newPassCajero").value.trim();
+        const msg = document.getElementById("msgCajero");
+
+        msg.textContent = "";
+
+        if (!email || !currentPass || !newPass) {
+          msg.textContent = "Todos los campos son necesarios.";
+          return;
+        }
+
+        try {
+          // 1) Iniciamos sesión temporalmente como el cajero
+          const cred = await signInWithEmailAndPassword(
+            auth,
+            email,
+            currentPass,
+          );
+
+          // 2) Cambiamos la contraseña
+          await updatePassword(cred.user, newPass);
+
+          msg.style.color = "green";
+          msg.textContent = "Contraseña del cajero actualizada correctamente.";
+
+          // 3) Cerramos sesión del cajero
+          await signOut(auth);
+
+          // Aquí tú vuelves a iniciar sesión como administrador manualmente
+        } catch (err) {
+          msg.style.color = "red";
+          msg.textContent = "Error: " + err.message;
+        }
+      };
+    </script>
+  </body>
+</html>
